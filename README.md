@@ -52,5 +52,4 @@ Current phase: Project initialization.
 ## Documentation
 
 - [Roadmap](docs/ROADMAP.md)
-- [Project State](docs/PROJECT_STATE.md)
 - [Technical Decisions](docs/DECISIONS.md)

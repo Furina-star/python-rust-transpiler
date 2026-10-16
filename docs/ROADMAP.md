@@ -1,10 +1,10 @@
 # Development Roadmap
 
 ## Phase 0: Project Initialization
-- [ ] Configure Cargo workspace
-- [ ] Configure Git
-- [ ] Create initial documentation
-- [ ] Verify project builds
+- [X] Configure Cargo workspace
+- [X] Configure Git
+- [X] Create initial documentation
+- [X] Verify project builds
 
 ## Phase 1: Lexical Analysis
 - [ ] Define token types
