@@ -1,21 +1,16 @@
 # Python-to-Rust Transpiler
 
-A learning-focused compiler engineering project
-written in Rust.
+A learning-focused compiler engineering project written in Rust.
 
 ## Overview
 
-This project aims to translate a restricted,
-statically typed Python-like language into
-equivalent Rust source code.
+This project aims to translate a restricted, statically typed Python-like language into equivalent Rust source code.
 
-The primary goal is to explore lexical analysis,
-parsing, abstract syntax trees, semantic analysis,
-and code generation.
+The primary goal is to explore lexical analysis, parsing, abstract syntax trees (ASTs), semantic analysis, and code generation.
 
-## Project Scope
+**Note:** The project does not aim to provide full Python compatibility.
 
-The initial implementation will support:
+## Planned Language Features
 
 - Integer arithmetic
 - Typed function declarations
@@ -24,32 +19,53 @@ The initial implementation will support:
 - Conditional statements
 - While loops
 
-The project does not aim to provide full Python
-compatibility.
+These features are planned; they have not been implemented yet.
 
-## Architecture
+## Planned Architecture
 
+```text
 Source Code
-↓
+    ↓
 Lexer
-↓
+    ↓
 Parser
-↓
+    ↓
 Abstract Syntax Tree
-↓
+    ↓
 Semantic Analysis
-↓
+    ↓
 Rust Code Generator
-↓
+    ↓
 Generated Rust Source
+```
 
 ## Project Status
 
-Under development.
+**Under development.** The Cargo workspace is configured and the initial Rust fundamentals exercise is complete. Compiler implementation has not started yet.
 
-Current phase: Project initialization.
+- **Current learning milestone:** Week 1, Day 1 completed
+- **Next:** Day 2 — structs, enums, and pattern matching
+- **Current implementation milestone:** Rust preparation, ahead of lexical analysis
+
+## Development
+
+Check the workspace:
+
+```bash
+cargo check --workspace
+cargo test --workspace
+cargo fmt --all -- --check
+```
+
+Run the introductory Rust exercise:
+
+```bash
+cargo run -p python-rust-transpiler --example rust_basics
+```
 
 ## Documentation
 
-- [Roadmap](docs/ROADMAP.md)
+- [Development Roadmap](docs/ROADMAP.md)
+- [Project State](docs/PROJECT_STATE.md)
 - [Technical Decisions](docs/DECISIONS.md)
+- [Day 1 Learning Notes](docs/learning/DAY_01.md)

@@ -1,10 +1,19 @@
 # Development Roadmap
 
 ## Phase 0: Project Initialization
-- [X] Configure Cargo workspace
-- [X] Configure Git
-- [X] Create initial documentation
-- [X] Verify project builds
+- [x] Configure Cargo workspace
+- [x] Configure Git
+- [x] Create initial documentation
+- [x] Verify workspace builds
+
+## Preparation: Rust Fundamentals (Week 1)
+- [x] Day 1: Variables, mutability, basic types, functions, and return expressions
+- [ ] Day 2: Structs, enums, and pattern matching
+- [ ] Day 3: Vec, String, loops, and iterators
+- [ ] Day 4: Option, Result, and basic error handling
+- [ ] Day 5: Ownership, borrowing, and review exercises
+
+> These learning days are preparatory work, separate from the compiler implementation phases below.
 
 ## Phase 1: Lexical Analysis
 - [ ] Define token types
@@ -38,4 +47,3 @@
 - [ ] Create macro crate
 - [ ] Integrate the transpiler
 - [ ] Test macro expansion
-    

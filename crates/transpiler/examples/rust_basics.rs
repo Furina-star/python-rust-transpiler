@@ -12,7 +12,7 @@ fn main() {
     let healing = 10;
 
     let take_damage = take_damage(health, damage);
-    let restore_health = restore_health(take_damage, healing);
+    let final_health = restore_health(take_damage, healing);
 
-    print!("Remaining health: {}", restore_health);
+    println!("Remaining health: {}", final_health);
 }
