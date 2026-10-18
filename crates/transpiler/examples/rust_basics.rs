@@ -1,4 +1,9 @@
 //! Practice variables, structs, and functions by calculating damage and healing.
+//!
+//! Create `Champion` values with `i32` fields and access their health and attack damage.
+//! Bind intermediate results with `let`, then pass them to `take_damage()` and
+//! `restore_health()`, which return values through their final expressions.
+//! Print Ahri's remaining health after applying Zed's attack and a heal.
 
 struct Champion {
     health: i32,

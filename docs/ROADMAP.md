@@ -1,6 +1,6 @@
 # Development Roadmap
 
-The workspace is initialized and the Day 1 and Day 2 practice examples run successfully. Compiler implementation has not started. See [Project State](PROJECT_STATE.md) for verification results, warnings, and the outstanding formatting follow-up.
+The workspace is initialized and the Day 1 through Day 3 practice examples run successfully. Vectors, strings, loops, and iterators are complete; Day 4's error-handling concepts are next. Compiler implementation has not started. See [Project State](PROJECT_STATE.md) for verification results and remaining warnings.
 
 Checked items record completed milestones, not a guarantee that every repository check passes. The compiler phases below describe implementation order; the intended runtime pipeline places semantic analysis before code generation.
 
@@ -15,7 +15,7 @@ Checked items record completed milestones, not a guarantee that every repository
 
 - [x] Day 1: Variables, mutability, basic types, functions, and return expressions
 - [x] Day 2: Structs, enums, and pattern matching, including associated data (example built and run)
-- [ ] Day 3: `Vec`, `String`, loops, and iterators
+- [x] Day 3: `Vec`, `String`, loops, and iterators, including `iter`, `iter_mut`, and `into_iter` (example built and run)
 - [ ] Day 4: `Option`, `Result`, and basic error handling
 - [ ] Day 5: Ownership, borrowing, and review exercises
 

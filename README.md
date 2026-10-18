@@ -41,10 +41,10 @@ Generated Rust Source
 
 ## Project Status
 
-**Under development.** The Cargo workspace contains one library crate, `python-rust-transpiler`, and two runnable Rust practice examples. The compiler source files are placeholders; no transpilation API or CLI is available yet.
+**Under development.** The Cargo workspace contains one library crate, `python-rust-transpiler`, and three runnable Rust practice examples. The compiler source files are placeholders; no transpilation API or CLI is available yet.
 
-- **Current learning milestone:** Week 1, Day 2 structs, enums, and pattern matching exercise implemented and run successfully
-- **Next:** Day 3 — `Vec`, `String`, loops, and iterators
+- **Current learning milestone:** Week 1, Day 3 completed — vectors, strings, loops, and iterators understood and practiced in a working example
+- **Next:** Day 4 — `Option`, `Result`, and basic error handling
 - **Current implementation milestone:** Rust preparation, ahead of lexical analysis
 
 See [Project State](docs/PROJECT_STATE.md) for verification results and remaining follow-ups.
@@ -86,7 +86,15 @@ Run the Day 2 practice example:
 cargo run -p python-rust-transpiler --example rust_structs
 ```
 
+Run the Day 3 practice example:
+
+```bash
+cargo run -p python-rust-transpiler --example rust_vectors
+```
+
 The basics example prints `Ahri's remaining health: 1000`. The Day 2 example prints the player's health and experience, followed by `Faker is respawning in 5 seconds...`.
+
+The Day 3 example practices vector growth and indexing, `String` and `&str`, `while` and `for` loops, and `iter()`, `iter_mut()`, and `into_iter()`. It prints total damage `1000`, adds `50` to each value through mutable iteration, and prints `[150, 250, 350, 450]` with total damage `1200`.
 
 ## Documentation
 
