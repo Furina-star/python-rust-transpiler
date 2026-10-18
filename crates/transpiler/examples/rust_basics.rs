@@ -1,3 +1,12 @@
+//! Practice variables, structs, and functions by calculating damage and healing.
+
+struct Champion {
+    health: i32,
+    attack_damage: i32,
+    ability_power: i32,
+    defense: i32,
+}
+
 fn take_damage(health: i32, amount: i32) -> i32 {
     health - amount
 }
@@ -7,12 +16,24 @@ fn restore_health(health: i32, amount: i32) -> i32 {
 }
 
 fn main() {
-    let health = 100;
-    let damage = 25;
-    let healing = 10;
+    let ahri = Champion {
+        health: 1000,
+        attack_damage: 0,
+        ability_power: 200,
+        defense: 100,
+    };
 
-    let take_damage = take_damage(health, damage);
-    let final_health = restore_health(take_damage, healing);
+    let zed = Champion {
+        health: 1000,
+        attack_damage: 100,
+        ability_power: 0,
+        defense: 100,
+    };
 
-    println!("Remaining health: {}", final_health);
+    let heal = 100;
+
+    let ahri_took_damage = take_damage(ahri.health, zed.attack_damage);
+    let ahri_final_health = restore_health(ahri_took_damage, heal);
+
+    println!("Ahri's remaining health: {}", ahri_final_health);
 }

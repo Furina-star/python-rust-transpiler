@@ -41,21 +41,38 @@ Generated Rust Source
 
 ## Project Status
 
-**Under development.** The Cargo workspace is configured and the initial Rust fundamentals exercise is complete. Compiler implementation has not started yet.
+**Under development.** The Cargo workspace contains one library crate, `python-rust-transpiler`, and two runnable Rust practice examples. The compiler source files are placeholders; no transpilation API or CLI is available yet.
 
-- **Current learning milestone:** Week 1, Day 1 completed
-- **Next:** Day 2 — structs, enums, and pattern matching
+- **Current learning milestone:** Week 1, Day 2 structs, enums, and pattern matching exercise implemented and run successfully
+- **Next:** Day 3 — `Vec`, `String`, loops, and iterators
 - **Current implementation milestone:** Rust preparation, ahead of lexical analysis
+
+See [Project State](docs/PROJECT_STATE.md) for verification results and remaining follow-ups.
+
+## Repository Layout
+
+```text
+Cargo.toml                  Workspace manifest
+crates/transpiler/
+    Cargo.toml              Library crate manifest
+    src/                    Placeholder compiler source files
+    examples/               Runnable Rust learning exercises
+docs/                       Project documentation
+```
 
 ## Development
 
-Check the workspace:
+Use a Rust toolchain with Cargo and support for the Rust 2024 edition and workspace resolver `3`, as configured in the manifests. The formatting command also requires `rustfmt`. Run the following commands from the repository root.
+
+Check the library and examples, run the test harness, and check formatting:
 
 ```bash
-cargo check --workspace
+cargo check --workspace --all-targets
 cargo test --workspace
 cargo fmt --all -- --check
 ```
+
+There are currently no unit or documentation tests. A successful test command verifies the test harness builds and runs; it does not validate compiler behavior. The examples currently emit warnings about unused fields and variants. See [Project State](docs/PROJECT_STATE.md) for the latest formatting result.
 
 Run the introductory Rust exercise:
 
@@ -63,9 +80,16 @@ Run the introductory Rust exercise:
 cargo run -p python-rust-transpiler --example rust_basics
 ```
 
+Run the Day 2 practice example:
+
+```bash
+cargo run -p python-rust-transpiler --example rust_structs
+```
+
+The basics example prints `Ahri's remaining health: 1000`. The Day 2 example prints the player's health and experience, followed by `Faker is respawning in 5 seconds...`.
+
 ## Documentation
 
 - [Development Roadmap](docs/ROADMAP.md)
 - [Project State](docs/PROJECT_STATE.md)
 - [Technical Decisions](docs/DECISIONS.md)
-- [Day 1 Learning Notes](docs/learning/DAY_01.md)
