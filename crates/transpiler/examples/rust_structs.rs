@@ -34,6 +34,8 @@ fn main() {
     match player_status {
         PlayerStatus::Alive => println!("Faker is alive!"),
         PlayerStatus::Dead => println!("Faker has been defeated"),
-        PlayerStatus::Respawning(seconds) => println!("Faker is respawning in {seconds} seconds..."),
+        PlayerStatus::Respawning(seconds) => {
+            println!("Faker is respawning in {seconds} seconds...")
+        }
     }
 }
