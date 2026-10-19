@@ -41,13 +41,13 @@ Generated Rust Source
 
 ## Project Status
 
-**Under development.** The Cargo workspace contains one library crate, `python-rust-transpiler`, and three runnable Rust practice examples. The compiler source files are placeholders; no transpilation API or CLI is available yet.
+**Early development.** The Cargo workspace is set up, with four runnable Rust practice examples. Compiler implementation has not started.
 
-- **Current learning milestone:** Week 1, Day 3 completed — vectors, strings, loops, and iterators understood and practiced in a working example
-- **Next:** Day 4 — `Option`, `Result`, and basic error handling
-- **Current implementation milestone:** Rust preparation, ahead of lexical analysis
+- **Completed:** Rust basics, structs, enums, collections, iterators, and error handling.
+- **Next:** Ownership and borrowing, followed by lexical analysis.
+- **Availability:** No transpilation API or CLI yet.
 
-See [Project State](docs/PROJECT_STATE.md) for verification results and remaining follow-ups.
+See [Project State](docs/PROJECT_STATE.md) for detailed progress and verification results.
 
 ## Repository Layout
 
@@ -62,9 +62,9 @@ docs/                       Project documentation
 
 ## Development
 
-Use a Rust toolchain with Cargo and support for the Rust 2024 edition and workspace resolver `3`, as configured in the manifests. The formatting command also requires `rustfmt`. Run the following commands from the repository root.
+Use a Rust toolchain that supports the 2024 edition, with Cargo and `rustfmt`. Run commands from the repository root.
 
-Check the library and examples, run the test harness, and check formatting:
+Check the project:
 
 ```bash
 cargo check --workspace --all-targets
@@ -72,29 +72,22 @@ cargo test --workspace
 cargo fmt --all -- --check
 ```
 
-There are currently no unit or documentation tests. A successful test command verifies the test harness builds and runs; it does not validate compiler behavior. The examples currently emit warnings about unused fields and variants. See [Project State](docs/PROJECT_STATE.md) for the latest formatting result.
+The test harness currently contains no tests. Known warnings are listed in [Project State](docs/PROJECT_STATE.md).
 
-Run the introductory Rust exercise:
+Run a practice example:
 
 ```bash
 cargo run -p python-rust-transpiler --example rust_basics
 ```
 
-Run the Day 2 practice example:
+Replace `rust_basics` with any example below:
 
-```bash
-cargo run -p python-rust-transpiler --example rust_structs
-```
-
-Run the Day 3 practice example:
-
-```bash
-cargo run -p python-rust-transpiler --example rust_vectors
-```
-
-The basics example prints `Ahri's remaining health: 1000`. The Day 2 example prints the player's health and experience, followed by `Faker is respawning in 5 seconds...`.
-
-The Day 3 example practices vector growth and indexing, `String` and `&str`, `while` and `for` loops, and `iter()`, `iter_mut()`, and `into_iter()`. It prints total damage `1000`, adds `50` to each value through mutable iteration, and prints `[150, 250, 350, 450]` with total damage `1200`.
+| Example | Topics |
+| --- | --- |
+| [rust_basics](crates/transpiler/examples/rust_basics.rs) | Variables, types, functions, and mutability |
+| [rust_structs](crates/transpiler/examples/rust_structs.rs) | Structs, enums, and pattern matching |
+| [rust_vectors](crates/transpiler/examples/rust_vectors.rs) | Vectors, strings, loops, and iterators |
+| [rust_options](crates/transpiler/examples/rust_options.rs) | `Option`, `Result`, and error handling |
 
 ## Documentation
 

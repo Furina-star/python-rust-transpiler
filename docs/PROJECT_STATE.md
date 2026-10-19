@@ -3,7 +3,7 @@
 ## Current Position
 
 - **Foundation:** Phase 0 (Cargo workspace and repository setup) completed.
-- **Learning:** Week 1, Day 3 completed — vectors, strings, loops, and iterators understood and practiced in a working example.
+- **Learning:** Week 1, Day 4 completed — `Option`, `Result`, and basic error handling practiced in a working example.
 - **Compiler implementation:** Not started; Phase 1 (Lexical Analysis) follows Rust fundamentals. The library entry point and compiler source files are placeholders; no transpilation API or CLI is available.
 
 ## Completed
@@ -15,11 +15,14 @@
 - Day 3: Created and grew a `Vec` with `push`, accessed elements by index, and checked its length in [the vectors example](../crates/transpiler/examples/rust_vectors.rs).
 - Practiced owned `String` values, `push_str`, and borrowed `&str` text.
 - Traversed and summed vector values with `while` and `for` loops; used `iter()` for shared access, `iter_mut()` to update elements, and `into_iter()` to consume a vector.
-- Built and ran all three practice examples successfully.
+- Day 4: Used `Vec::get` and matched `Some` / `None` for present and missing elements in [the options example](../crates/transpiler/examples/rust_options.rs).
+- Matched `Ok` / `Err` for integer parsing and propagated `ParseIntError` with `?` in `parse_damage`.
+- Converted parse errors to `String` with `map_err` and `?` in `validate_damage`; accepted positive and zero damage, rejected negative damage with a custom error, and handled invalid input.
+- Built and ran all four practice examples successfully.
 
 ## Current Task
 
-Begin Day 4: `Option`, `Result`, and basic error handling. Keep practice examples separate from the compiler source files.
+Begin Day 5: Ownership, borrowing, and review exercises. Keep practice examples separate from the compiler source files.
 
 ## Known Issues / Follow-ups
 
@@ -40,11 +43,12 @@ cargo test --workspace
 cargo run -p python-rust-transpiler --example rust_basics
 cargo run -p python-rust-transpiler --example rust_structs
 cargo run -p python-rust-transpiler --example rust_vectors
+cargo run -p python-rust-transpiler --example rust_options
 ```
 
 ## Verification Results
 
-Reviewed on 2026-10-18 using `rustc 1.98.1` and `cargo 1.98.1`:
+Reviewed on 2026-10-19 using `rustc 1.98.1` and `cargo 1.98.1`:
 
 | Check | Result |
 | --- | --- |
@@ -54,6 +58,7 @@ Reviewed on 2026-10-18 using `rustc 1.98.1` and `cargo 1.98.1`:
 | `rust_basics` example | Passed; printed `Ahri's remaining health: 1000` |
 | `rust_structs` example | Passed; output shown below |
 | `rust_vectors` example | Passed; printed `Faker T1`, `Ahri`, total damage `1000`, updated values `[150, 250, 350, 450]`, total damage `1200`, and owned values `1`, `2`, `3` |
+| `rust_options` example | Passed; found damage `200`, handled a missing element, parsed `123`, and handled invalid parsing; validation returned `Ok(250)`, `Ok(0)`, `Err("Damage cannot be negative")` for `-25`, and `Err("invalid digit found in string")` for `invalid` |
 
 ```text
 Faker initial health: 100
@@ -61,8 +66,6 @@ Faker current health: 80
 Faker experiences: 50
 Faker is respawning in 5 seconds...
 ```
-
-Added a module-level Rust doc comment to `rust_vectors.rs` describing the Day 3 concepts and iterator ownership modes. Example behavior is unchanged.
 
 ## Documentation Convention
 
@@ -77,4 +80,4 @@ At the end of each study day:
 
 ## Last Review
 
-2026-10-18: Recorded completion of Day 3's vectors, strings, loops, and iterators practice, documented the vectors example, and reran the checks and all three examples listed above. Formatting now passes. Day 4 is next.
+2026-10-19: Recorded completion of Day 4's `Option`, `Result`, and error-handling practice and reran the checks and all four examples listed above. Formatting passes; existing unused-code and environment warnings remain. Day 5 is next.
