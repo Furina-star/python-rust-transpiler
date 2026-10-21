@@ -6,4 +6,8 @@ pub enum Token {
     Identifier(String),
     Def,
     Return,
+    LeftParen,
+    RightParen,
+    Colon,
+    Comman,
 }

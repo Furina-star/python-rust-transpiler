@@ -198,6 +198,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
+    // Test recognize keyword boundaries
     #[test]
     fn recognizes_keyword_boundaries() {
         let actual = tokenize("def defense return returnValue player1").unwrap();
