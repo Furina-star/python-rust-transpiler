@@ -1,5 +1,14 @@
 use crate::token::Token;
 
+// Helper function that checks if the start of a string is a valid identifier
+fn is_identifier_start(ch: char) -> bool {
+    ch.is_ascii_alphabetic() || ch == '_'
+}
+
+fn is_identifier_continue(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || ch == '_'
+}
+
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
@@ -121,5 +130,26 @@ mod tests {
         let error = tokenize("123+@").unwrap_err();
 
         assert_eq!(error, "Unexpected character: @");
+    }
+
+    #[test]
+    fn recognizes_identifier_start_characters() {
+        assert!(is_identifier_start('h'));
+        assert!(is_identifier_start('Z'));
+        assert!(is_identifier_start('_'));
+
+        assert!(!is_identifier_start('7'));
+        assert!(!is_identifier_start('+'));
+    }
+
+    #[test]
+    fn recognizes_identifier_continuation_characters() {
+        assert!(is_identifier_continue('a'));
+        assert!(is_identifier_continue('Z'));
+        assert!(is_identifier_continue('7'));
+        assert!(is_identifier_continue('_'));
+
+        assert!(!is_identifier_continue('+'));
+        assert!(!is_identifier_continue(' '));
     }
 }
