@@ -75,11 +75,27 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test for integer overflow minimum of i32 or signed 32-bit integer
+    // Test for integer overflow, upper bound of i32 or signed 32-bit integer
     #[test]
     fn rejects_integer_overflow() {
         let result = tokenize("2147483648");
 
         assert!(result.is_err());
+    }
+
+    // Test mixed arithmetics
+    #[test]
+    fn tokenizes_mixed_arithmetic() {
+        let actual = tokenize("0  + 12 - 003").unwrap();
+
+        let expected = vec![
+          Token::Integer(0),
+          Token::Plus,
+          Token::Integer(12),
+          Token::Minus,
+          Token::Integer(003),
+        ];
+
+        assert_eq!(actual, expected);
     }
 }
