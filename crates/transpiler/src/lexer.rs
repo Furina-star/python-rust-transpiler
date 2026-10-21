@@ -35,7 +35,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 let value = digits.parse::<i32>().map_err(|e| e.to_string())?;
                 let token = Token::Integer(value);
                 tokens.push(token);
-            },
+            }
             '+' => tokens.push(Token::Plus),
             '-' => tokens.push(Token::Minus),
             c if is_identifier_start(c) => {
@@ -52,10 +52,16 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
 
-                // If failed to recognized as keyword append it as Identifier
-                tokens.push(Token::Identifier(identifier));
-            },
-            ' ' => {},
+                // Append matching keywords and identifiers
+                let token = match identifier.as_str() {
+                    "def" => Token::Def,
+                    "return" => Token::Return,
+                    _ => Token::Identifier(identifier),
+                };
+
+                tokens.push(token);
+            }
+            ' ' => {}
             _ => return Err(format!("Unexpected character: {ch}")),
         }
     }
@@ -71,11 +77,7 @@ mod tests {
     fn tokenizes_plus_and_minus() {
         let actual = tokenize("+ - +").unwrap();
 
-        let expected = vec![
-            Token::Plus,
-            Token::Minus,
-            Token::Plus,
-        ];
+        let expected = vec![Token::Plus, Token::Minus, Token::Plus];
 
         assert_eq!(actual, expected);
     }
@@ -93,11 +95,7 @@ mod tests {
     fn tokenizes_integer_literals() {
         let actual = tokenize("123+45").unwrap();
 
-        let expected = vec![
-            Token::Integer(123),
-            Token::Plus,
-            Token::Integer(45),
-        ];
+        let expected = vec![Token::Integer(123), Token::Plus, Token::Integer(45)];
 
         assert_eq!(actual, expected);
     }
@@ -116,11 +114,11 @@ mod tests {
         let actual = tokenize("0  + 12 - 003").unwrap();
 
         let expected = vec![
-          Token::Integer(0),
-          Token::Plus,
-          Token::Integer(12),
-          Token::Minus,
-          Token::Integer(3),
+            Token::Integer(0),
+            Token::Plus,
+            Token::Integer(12),
+            Token::Minus,
+            Token::Integer(3),
         ];
 
         assert_eq!(actual, expected);
@@ -179,9 +177,9 @@ mod tests {
         let actual = tokenize("health player _total").unwrap();
 
         let expected = vec![
-          Token::Identifier(String::from("health")),
-          Token::Identifier(String::from("player")),
-          Token::Identifier(String::from("_total")),
+            Token::Identifier(String::from("health")),
+            Token::Identifier(String::from("player")),
+            Token::Identifier(String::from("_total")),
         ];
 
         assert_eq!(actual, expected);
