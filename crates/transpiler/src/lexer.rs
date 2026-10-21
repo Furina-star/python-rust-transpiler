@@ -8,7 +8,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     while let Some(ch) = chars.next() {
         match ch {
             '0'..='9' => {
-                // Group ascii digits together as one token
+                // Group and collects ascii digits together
                 let mut digits = String::new();
                 digits.push(ch);
 
@@ -20,7 +20,11 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                         break;
                     }
                 }
-                println!("Collected digits: {digits}");
+
+                // Convert grouped ascii digits and append it
+                let value = digits.parse::<i32>().map_err(|e| e.to_string())?;
+                let token = Token::Integer(value);
+                tokens.push(token);
             },
             '+' => tokens.push(Token::Plus),
             '-' => tokens.push(Token::Minus),
@@ -57,9 +61,25 @@ mod tests {
         assert_eq!(error, "Unexpected character: @");
     }
 
-    // Test grouped digits
+    // Test grouped tokenized ascii digits
     #[test]
-    fn previews_digit_groups() {
-        tokenize("123+45").unwrap();
+    fn tokenizes_integer_literals() {
+        let actual = tokenize("123+45").unwrap();
+
+        let expected = vec![
+            Token::Integer(123),
+            Token::Plus,
+            Token::Integer(45),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test for integer overflow minimum of i32 or signed 32-bit integer
+    #[test]
+    fn rejects_integer_overflow() {
+        let result = tokenize("2147483648");
+
+        assert!(result.is_err());
     }
 }
