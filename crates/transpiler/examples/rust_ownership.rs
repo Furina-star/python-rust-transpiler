@@ -1,8 +1,8 @@
-fn show_character(name: &str){
+fn show_character(name: &str) {
     println!("Character: {name}");
 }
 
-fn update_character(name: &mut String){
+fn update_character(name: &mut String) {
     name.push_str(" the Iudex");
 }
 
@@ -60,5 +60,4 @@ fn main() {
 
     println!("\n{view}");
     println!("Original Name: {favorite_character}");
-
 }

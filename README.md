@@ -41,10 +41,10 @@ Generated Rust Source
 
 ## Project Status
 
-**Early development.** The Cargo workspace is set up, with four runnable Rust practice examples. Compiler implementation has not started.
+**Rust fundamentals complete.** The Cargo workspace is set up, with six runnable Rust practice examples. Compiler implementation has not started.
 
-- **Completed:** Rust basics, structs, enums, collections, iterators, and error handling.
-- **Next:** Ownership and borrowing, followed by lexical analysis.
+- **Completed:** Rust basics, structs, enums, collections, iterators, error handling, ownership, borrowing, and an integration exercise.
+- **Next:** Phase 1 — lexical analysis, beginning with compiler token types and arithmetic tokenization.
 - **Availability:** No transpilation API or CLI yet.
 
 See [Project State](docs/PROJECT_STATE.md) for detailed progress and verification results.
@@ -88,9 +88,14 @@ Replace `rust_basics` with any example below:
 | [rust_structs](crates/transpiler/examples/rust_structs.rs) | Structs, enums, and pattern matching |
 | [rust_vectors](crates/transpiler/examples/rust_vectors.rs) | Vectors, strings, loops, and iterators |
 | [rust_options](crates/transpiler/examples/rust_options.rs) | `Option`, `Result`, and error handling |
+| [rust_ownership](crates/transpiler/examples/rust_ownership.rs) | Moves, copies, cloning, shared and mutable borrowing, and borrowed return values |
+| [rust_integration](crates/transpiler/examples/rust_integration.rs) | Integer parsing, token enums, vectors, error propagation, and borrowed iteration |
+
+The integration exercise parses two integer strings and constructs a three-token addition expression. It is a fundamentals review; it does not tokenize source code or evaluate the expression.
 
 ## Documentation
 
 - [Development Roadmap](docs/ROADMAP.md)
 - [Project State](docs/PROJECT_STATE.md)
+- [Planned Architecture](docs/ARCHITECTURE.md)
 - [Technical Decisions](docs/DECISIONS.md)

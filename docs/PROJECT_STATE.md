@@ -3,8 +3,8 @@
 ## Current Position
 
 - **Foundation:** Phase 0 (Cargo workspace and repository setup) completed.
-- **Learning:** Week 1, Day 4 completed — `Option`, `Result`, and basic error handling practiced in a working example.
-- **Compiler implementation:** Not started; Phase 1 (Lexical Analysis) follows Rust fundamentals. The library entry point and compiler source files are placeholders; no transpilation API or CLI is available.
+- **Learning:** Rust fundamentals completed through Day 5 and the integration review, with six runnable practice examples.
+- **Compiler implementation:** Not started; Phase 1 (Lexical Analysis) is next. The library entry point and compiler source files are placeholders; no transpilation API or CLI is available.
 
 ## Completed
 
@@ -18,11 +18,26 @@
 - Day 4: Used `Vec::get` and matched `Some` / `None` for present and missing elements in [the options example](../crates/transpiler/examples/rust_options.rs).
 - Matched `Ok` / `Err` for integer parsing and propagated `ParseIntError` with `?` in `parse_damage`.
 - Converted parse errors to `String` with `map_err` and `?` in `validate_damage`; accepted positive and zero damage, rejected negative damage with a custom error, and handled invalid input.
-- Built and ran all four practice examples successfully.
+- Day 5: Practiced moving an owned `String`, copying integers, block scope, and cloning into an independently mutable string in [the ownership example](../crates/transpiler/examples/rust_ownership.rs).
+- Borrowed strings through `&str`, updated an owned string through `&mut String`, returned an owned label from `make_label`, and returned a borrowed view tied to the input lifetime through `view_label`.
+- Integration review: Combined `Token::Integer(i32)` and `Token::Plus`, `Vec<Token>`, integer parsing, `map_err`, and `?` in [the integration example](../crates/transpiler/examples/rust_integration.rs).
+- Constructed three tokens from two integer strings, matched their variants through a shared borrow, and reused the vector afterward to print its length.
+- Built and ran all six practice examples successfully.
 
 ## Current Task
 
-Begin Day 5: Ownership, borrowing, and review exercises. Keep practice examples separate from the compiler source files.
+Begin Phase 1: Lexical Analysis. Define compiler token types in `src/token.rs`, implement arithmetic tokenization in `src/lexer.rs`, and add lexer tests. Keep practice examples separate from the compiler source files.
+
+## Fundamentals Review
+
+The ownership example demonstrates that shared and mutable borrows let the original owner keep using its string. `view_label` returns a reference to its input; Rust infers the matching lifetime through lifetime elision.
+
+The integration example correctly parses both inputs before returning a token vector. `map_err` converts each parse error to `String`, and `?` returns early if parsing fails. `display_tokens` borrows the vector, so `main` can still call `tokens.len()` afterward.
+
+- **Verified input:** `build_expression("50", "75")` produces `Integer(50)`, `Plus`, and `Integer(75)`; the displayed count is `3`.
+- **Scope:** The example constructs an addition expression from two separate inputs. It does not scan source text, preserve original lexemes, or evaluate addition; compiler lexical analysis remains unimplemented.
+- **Small improvement:** `display_tokens` could accept `&[Token]` instead of `&Vec<Token>` because it only reads elements. The current signature works correctly for this example.
+- **Coverage follow-up:** The integration example's `main` exercises only successful parsing. Invalid, empty, and out-of-range inputs should be covered when adding automated parsing or lexer tests.
 
 ## Known Issues / Follow-ups
 
@@ -44,11 +59,13 @@ cargo run -p python-rust-transpiler --example rust_basics
 cargo run -p python-rust-transpiler --example rust_structs
 cargo run -p python-rust-transpiler --example rust_vectors
 cargo run -p python-rust-transpiler --example rust_options
+cargo run -p python-rust-transpiler --example rust_ownership
+cargo run -p python-rust-transpiler --example rust_integration
 ```
 
 ## Verification Results
 
-Reviewed on 2026-10-19 using `rustc 1.98.1` and `cargo 1.98.1`:
+Reviewed on 2026-10-21 using `rustc 1.98.1` and `cargo 1.98.1`:
 
 | Check | Result |
 | --- | --- |
@@ -59,6 +76,8 @@ Reviewed on 2026-10-19 using `rustc 1.98.1` and `cargo 1.98.1`:
 | `rust_structs` example | Passed; output shown below |
 | `rust_vectors` example | Passed; printed `Faker T1`, `Ahri`, total damage `1000`, updated values `[150, 250, 350, 450]`, total damage `1200`, and owned values `1`, `2`, `3` |
 | `rust_options` example | Passed; found damage `200`, handled a missing element, parsed `123`, and handled invalid parsing; validation returned `Ok(250)`, `Ok(0)`, `Err("Damage cannot be negative")` for `-25`, and `Err("invalid digit found in string")` for `invalid` |
+| `rust_ownership` example | Passed; printed moved and copied values, kept `Furina` unchanged while extending its clone, updated `Neuvillette` to `Neuvillette the Iudex`, and displayed a borrowed label while retaining the original name |
+| `rust_integration` example | Passed; printed `Integer: 50`, `Plus`, `Integer: 75`, and `Token count: 3` |
 
 ```text
 Faker initial health: 100
@@ -80,4 +99,4 @@ At the end of each study day:
 
 ## Last Review
 
-2026-10-19: Recorded completion of Day 4's `Option`, `Result`, and error-handling practice and reran the checks and all four examples listed above. Formatting passes; existing unused-code and environment warnings remain. Day 5 is next.
+2026-10-21: Reviewed ownership, borrowing, and the integration exercise; recorded completion of Rust fundamentals and reran the checks and all six examples listed above. Formatting passes; existing unused-code and environment warnings remain. Phase 1 (Lexical Analysis) is next.
