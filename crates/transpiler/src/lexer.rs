@@ -5,6 +5,7 @@ fn is_identifier_start(ch: char) -> bool {
     ch.is_ascii_alphabetic() || ch == '_'
 }
 
+// Helper function that checks if the continuations character is also valid
 fn is_identifier_continue(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_'
 }
@@ -37,6 +38,23 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             },
             '+' => tokens.push(Token::Plus),
             '-' => tokens.push(Token::Minus),
+            c if is_identifier_start(c) => {
+                // Maximal munch where it detects a reserved keyword until we've reached the end
+                let mut identifier = String::new();
+                identifier.push(c);
+
+                while let Some(&next_ch) = chars.peek() {
+                    if is_identifier_continue(next_ch) {
+                        identifier.push(next_ch);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                // If failed to recognized as keyword append it as Identifier
+                tokens.push(Token::Identifier(identifier));
+            },
             ' ' => {},
             _ => return Err(format!("Unexpected character: {ch}")),
         }
@@ -132,6 +150,7 @@ mod tests {
         assert_eq!(error, "Unexpected character: @");
     }
 
+    // Test starting characters
     #[test]
     fn recognizes_identifier_start_characters() {
         assert!(is_identifier_start('h'));
@@ -142,6 +161,7 @@ mod tests {
         assert!(!is_identifier_start('+'));
     }
 
+    // Test the continuation characters
     #[test]
     fn recognizes_identifier_continuation_characters() {
         assert!(is_identifier_continue('a'));
@@ -151,5 +171,19 @@ mod tests {
 
         assert!(!is_identifier_continue('+'));
         assert!(!is_identifier_continue(' '));
+    }
+
+    // Test for identifiers
+    #[test]
+    fn tokenizes_identifiers() {
+        let actual = tokenize("health player _total").unwrap();
+
+        let expected = vec![
+          Token::Identifier(String::from("health")),
+          Token::Identifier(String::from("player")),
+          Token::Identifier(String::from("_total")),
+        ];
+
+        assert_eq!(actual, expected);
     }
 }
