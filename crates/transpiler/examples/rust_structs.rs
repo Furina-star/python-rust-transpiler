@@ -5,6 +5,7 @@
 //! variant that carries a countdown. Use an exhaustive `match` to handle every state
 //! and bind the respawn seconds to print the remaining wait.
 
+#![allow(dead_code)]
 enum PlayerStatus {
     Alive,
     Dead,

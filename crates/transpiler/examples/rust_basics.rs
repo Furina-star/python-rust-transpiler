@@ -5,6 +5,8 @@
 //! `restore_health()`, which return values through their final expressions.
 //! Print Ahri's remaining health after applying Zed's attack and a heal.
 
+#![allow(dead_code)]
+
 struct Champion {
     health: i32,
     attack_damage: i32,
