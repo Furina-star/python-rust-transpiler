@@ -106,4 +106,20 @@ mod tests {
 
         assert!(actual.is_empty());
     }
+
+    // Test whitespaces
+    #[test]
+    fn handles_spaces_only() {
+        let actual = tokenize("     ").unwrap();
+
+        assert!(actual.is_empty());
+    }
+
+    // Test invalid character after a valid tokens
+    #[test]
+    fn rejects_invalid_character_after_valid_tokens() {
+        let error = tokenize("123+@").unwrap_err();
+
+        assert_eq!(error, "Unexpected character: @");
+    }
 }
