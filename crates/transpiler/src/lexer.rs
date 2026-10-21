@@ -39,7 +39,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             '+' => tokens.push(Token::Plus),
             '-' => tokens.push(Token::Minus),
             c if is_identifier_start(c) => {
-                // Maximal munch where it detects a reserved keyword until we've reached the end
+                // Maximal munch where it detects a reserved keyword until the next character cannot belong to an identifier
                 let mut identifier = String::new();
                 identifier.push(c);
 
@@ -180,6 +180,34 @@ mod tests {
             Token::Identifier(String::from("health")),
             Token::Identifier(String::from("player")),
             Token::Identifier(String::from("_total")),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn tokenizes_keywords() {
+        let actual = tokenize("def return health").unwrap();
+
+        let expected = vec![
+            Token::Def,
+            Token::Return,
+            Token::Identifier(String::from("health")),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn recognizes_keyword_boundaries() {
+        let actual = tokenize("def defense return returnValue player1").unwrap();
+
+        let expected = vec![
+            Token::Def,
+            Token::Identifier(String::from("defense")),
+            Token::Return,
+            Token::Identifier(String::from("returnValue")),
+            Token::Identifier(String::from("player1")),
         ];
 
         assert_eq!(actual, expected);
