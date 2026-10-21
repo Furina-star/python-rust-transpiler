@@ -1,3 +1,11 @@
+fn show_character(name: &str){
+    println!("Character: {name}");
+}
+
+fn update_character(name: &mut String){
+    name.push_str(" the Iudex");
+}
+
 fn main() {
     // Moving ownership
     let character1 = String::from("Furina");
@@ -24,5 +32,14 @@ fn main() {
     duplicate.push_str(" de Fontaine");
 
     println!("\nOriginal: {original}");
-    println!("Duplicate: {duplicate}");
+    println!("Duplicate: {duplicate} \n");
+
+    // Borrowing and References
+    let mut character = String::from("Neuvillette");
+
+    show_character(&character);
+    update_character(&mut character);
+    show_character(&character);
+
+    println!("Original owner still has: {character}");
 }
