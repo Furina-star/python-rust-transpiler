@@ -93,9 +93,17 @@ mod tests {
           Token::Plus,
           Token::Integer(12),
           Token::Minus,
-          Token::Integer(003),
+          Token::Integer(3),
         ];
 
         assert_eq!(actual, expected);
+    }
+
+    // Test for empty input
+    #[test]
+    fn handles_empty_input() {
+        let actual = tokenize("").unwrap();
+
+        assert!(actual.is_empty());
     }
 }
