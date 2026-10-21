@@ -9,5 +9,5 @@ pub enum Token {
     LeftParen,
     RightParen,
     Colon,
-    Comman,
+    Comma,
 }
