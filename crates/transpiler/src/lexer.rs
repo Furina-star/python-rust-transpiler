@@ -2,8 +2,9 @@ use crate::token::Token;
 
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
+    let mut chars = source.chars().peekable();
 
-    for ch in source.chars() {
+    while let Some(ch) = chars.next() {
         match ch {
             '+' => {
                 tokens.push(Token::Plus);
@@ -22,6 +23,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
 mod tests {
     use super::*;
 
+    // Test tokenization for Plus and Minus
     #[test]
     fn tokenizes_plus_and_minus() {
         let actual = tokenize("+ - +").unwrap();
@@ -33,5 +35,13 @@ mod tests {
         ];
 
         assert_eq!(actual, expected);
+    }
+
+    // Test for invalid characters such as @
+    #[test]
+    fn reject_invalid_character() {
+        let error = tokenize("@").unwrap_err();
+
+        assert_eq!(error, "Unexpected character: @");
     }
 }
