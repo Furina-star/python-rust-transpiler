@@ -6,6 +6,16 @@ fn update_character(name: &mut String){
     name.push_str(" the Iudex");
 }
 
+fn make_label(name: &str) -> String {
+    let mut label = String::from("Character: ");
+    label.push_str(name);
+    label
+}
+
+fn view_label(label: &str) -> &str {
+    label
+}
+
 fn main() {
     // Moving ownership
     let character1 = String::from("Furina");
@@ -42,4 +52,13 @@ fn main() {
     show_character(&character);
 
     println!("Original owner still has: {character}");
+
+    // Ownership in Functions & Lifetimes
+    let favorite_character = String::from("Furina");
+    let label = make_label(&favorite_character);
+    let view = view_label(&label);
+
+    println!("\n{view}");
+    println!("Original Name: {favorite_character}");
+
 }
