@@ -100,7 +100,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
 
-                // Append matching keywords and identifiers
+                // Append matching keywords else identifiers
                 let token = match identifier.as_str() {
                     "def" => Token::Def,
                     "return" => Token::Return,
@@ -110,6 +110,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     "and" => Token::And,
                     "or" => Token::Or,
                     "not" => Token::Not,
+                    "True" => Token::Boolean(true),
+                    "False" => Token::Boolean(true),
                     _ => Token::Identifier(identifier),
                 };
 
@@ -444,4 +446,34 @@ mod tests {
 
         assert_eq!(actual, expected);
     }
+
+    // Test boolean literals
+    #[test]
+    fn tokenizes_boolean_literals() {
+        let actual = tokenize("True False not True").unwrap();
+
+        let expected = vec![
+            Token::Boolean(true),
+            Token::Boolean(false),
+            Token::Or,
+            Token::Boolean(true),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test boolean literal boundaries
+    #[test]
+    fn recognizes_boolean_literal_boundaries() {
+        let actual = tokenize("TrueValue False_alarm true").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("TrueValue")),
+            Token::Identifier(String::from("False_alarm")),
+            Token::Boolean(true),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
 }

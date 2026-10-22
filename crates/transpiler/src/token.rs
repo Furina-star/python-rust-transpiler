@@ -37,4 +37,7 @@ pub enum Token {
     And,
     Or,
     Not,
+
+    // Boolean Literals
+    Boolean(bool),
 }
