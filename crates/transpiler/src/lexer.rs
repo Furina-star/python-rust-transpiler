@@ -123,6 +123,10 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
         tokens.extend(line_tokens);
     }
 
+    if paren_depth != 0 {
+        return Err(String::from("Unclosed parenthesis"));
+    }
+
     record_indent_decrease(0, &mut levels, &mut tokens)?;
 
     Ok(tokens)
@@ -970,5 +974,44 @@ mod tests {
         let error = tokenize_multiline("if x:\n\ty=1").unwrap_err();
 
         assert_eq!(error, "Tabs are not supported; use spaces");
+    }
+
+    // Verify parenthesized expression
+    #[test]
+    fn tokenizes_parenthesized_multiline_expression() {
+        let actual = tokenize_multiline("total=(10+\n    20)").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("total")),
+            Token::Equal,
+            Token::LeftParen,
+            Token::Integer(10),
+            Token::Plus,
+            Token::Integer(20),
+            Token::RightParen,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Verify both function are equal wrapped and single-line
+    #[test]
+    fn tokenizes_multiline_function_signature() {
+        let wrapped =
+            tokenize_multiline("def add(\n    a:int,\n    b:int\n)->int:\n    return a+b").unwrap();
+
+        let single_line = tokenize_multiline("def add(a:int,b:int)->int:\n    return a+b").unwrap();
+
+        assert_eq!(wrapped, single_line);
+    }
+
+    // Rejects invalid parenthesis
+    #[test]
+    fn rejects_unbalanced_parentheses() {
+        let unclosed = tokenize_multiline("total=(10+20");
+        let unmatched = tokenize_multiline("total=10)");
+
+        assert!(unclosed.is_err());
+        assert!(unmatched.is_err());
     }
 }
