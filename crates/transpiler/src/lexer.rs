@@ -85,10 +85,6 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
             continue;
         }
 
-        if line.trim_matches(' ').is_empty() {
-            continue;
-        }
-
         if saw_code_line {
             tokens.push(Token::Newline);
         }
@@ -243,6 +239,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
             }
+            '\t' => return Err(String::from("Tabs are not supported; use spaces")),
             ' ' => {}
             _ => return Err(format!("Unexpected character: {ch}")),
         }
@@ -921,5 +918,31 @@ mod tests {
         let without_comment = tokenize_multiline("if x:\n    y=1\n    z=2\nw=3").unwrap();
 
         assert_eq!(with_comment, without_comment);
+    }
+
+    // Verify terminal newline behavior
+    #[test]
+    fn handles_terminal_newline() {
+        let without = tokenize_multiline("if x:\n    y=1").unwrap();
+        let with = tokenize_multiline("if x:\n    y=1\n").unwrap();
+
+        assert_eq!(without, with);
+    }
+
+    // Verify windows line endings behavior
+    #[test]
+    fn normalizes_multiline_line_endings() {
+        let unix = tokenize_multiline("x=1\ny=2\n").unwrap();
+        let windows = tokenize_multiline("x=1\r\ny=2\r\n").unwrap();
+
+        assert_eq!(unix, windows);
+    }
+
+    // Rejects tab indentation
+    #[test]
+    fn rejects_tab_indentation() {
+        let error = tokenize_multiline("if x:\n\ty=1").unwrap_err();
+
+        assert_eq!(error, "Tabs are not supported; use spaces");
     }
 }
