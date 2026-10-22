@@ -287,10 +287,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     opening_lines.push(line_number);
                 }
 
-                Token::RightParen => {
-                    if opening_lines.pop().is_none() {
-                        return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
-                    }
+                Token::RightParen if opening_lines.pop().is_none() => {
+                    return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
                 }
 
                 _ => {}
@@ -1146,5 +1144,38 @@ mod tests {
         let error = tokenize("x=1\n  y=2147483648").unwrap_err();
 
         assert!(error.starts_with("Line 2, Column 5:"));
+    }
+
+    #[test]
+    fn tokenizes_complete_typed_function() {
+        let source = "def add(a: int, b: int) -> int:\n    return a + b";
+
+        let actual = tokenize(source).unwrap();
+
+        let expected = vec![
+            Token::Def,
+            Token::Identifier(String::from("add")),
+            Token::LeftParen,
+            Token::Identifier(String::from("a")),
+            Token::Colon,
+            Token::Identifier(String::from("int")),
+            Token::Comma,
+            Token::Identifier(String::from("b")),
+            Token::Colon,
+            Token::Identifier(String::from("int")),
+            Token::RightParen,
+            Token::Arrow,
+            Token::Identifier(String::from("int")),
+            Token::Colon,
+            Token::Newline,
+            Token::Indent,
+            Token::Return,
+            Token::Identifier(String::from("a")),
+            Token::Plus,
+            Token::Identifier(String::from("b")),
+            Token::Dedent,
+        ];
+
+        assert_eq!(actual, expected);
     }
 }
