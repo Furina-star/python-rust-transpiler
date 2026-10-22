@@ -72,6 +72,7 @@ fn record_indent_decrease(
     Ok(())
 }
 
+// Convert a single line into tokens, ignoring spaces and comments.
 fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
@@ -217,14 +218,15 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
     Ok(tokens)
 }
 
-// Tokenize lines with newlines and indentation.
+// Convert source code into tokens, handling newlines, indentation, and line continuations.
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut levels: Vec<usize> = vec![0];
     let mut saw_code_line = false;
     let mut paren_depth: usize = 0;
 
-    for line in source.lines() {
+    for (index, line) in source.lines().enumerate() {
+        let line_number = index + 1;
         let content = line.trim_start_matches(' ');
 
         if content.is_empty() || content.starts_with('#') {
@@ -242,10 +244,12 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
         if !continuation {
             let spaces = count_leading_spaces(line);
 
-            process_indentation(spaces, &mut levels, &mut tokens)?;
+            process_indentation(spaces, &mut levels, &mut tokens)
+                .map_err(|message| format!("Line {line_number}: {message}"))?;
         }
 
-        let line_tokens = tokenize_line(content)?;
+        let line_tokens =
+            tokenize_line(content).map_err(|message| format!("Line {line_number}: {message}"))?;
 
         for token in &line_tokens {
             match token {
@@ -296,7 +300,7 @@ mod tests {
     fn reject_invalid_character() {
         let error = tokenize("@").unwrap_err();
 
-        assert_eq!(error, "Unexpected character: @");
+        assert_eq!(error, "Line 1: Unexpected character: @");
     }
 
     // Verify integer literal tokens.
@@ -354,7 +358,7 @@ mod tests {
     fn rejects_invalid_character_after_valid_tokens() {
         let error = tokenize("123+@").unwrap_err();
 
-        assert_eq!(error, "Unexpected character: @");
+        assert_eq!(error, "Line 1: Unexpected character: @");
     }
 
     // Validate identifier start characters.
@@ -543,7 +547,7 @@ mod tests {
     fn rejects_standalone_exclamation() {
         let error = tokenize("!").unwrap_err();
 
-        assert_eq!(error, "Unexpected character: !");
+        assert_eq!(error, "Line 1: Unexpected character: !");
     }
 
     // Verify control flow keywords.
@@ -973,7 +977,7 @@ mod tests {
     fn rejects_tab_indentation() {
         let error = tokenize("if x:\n\ty=1").unwrap_err();
 
-        assert_eq!(error, "Tabs are not supported; use spaces");
+        assert_eq!(error, "Line 2: Tabs are not supported; use spaces");
     }
 
     // Verify parenthesized expression
@@ -1040,5 +1044,21 @@ mod tests {
         let result = tokenize("x=(10+20");
 
         assert_eq!(result.unwrap_err(), "Unclosed parenthesis");
+    }
+
+    // Verify a valid an error with line number
+    #[test]
+    fn reports_invalid_character_line() {
+        let error = tokenize("x=1\n\n# comment\ny=@").unwrap_err();
+
+        assert_eq!(error, "Line 4: Unexpected character: @");
+    }
+
+    // Report inconsistent indentation on line 3
+    #[test]
+    fn reports_inconsistent_indentation_line() {
+        let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
+
+        assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
     }
 }
