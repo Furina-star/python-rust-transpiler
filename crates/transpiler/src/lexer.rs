@@ -38,6 +38,10 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             }
             '+' => tokens.push(Token::Plus),
             '-' => tokens.push(Token::Minus),
+            '(' => tokens.push(Token::LeftParen),
+            ')' => tokens.push(Token::RightParen),
+            ':' => tokens.push(Token::Colon),
+            ',' => tokens.push(Token::Comma),
             c if is_identifier_start(c) => {
                 // Maximal munch where it detects a reserved keyword until the next character cannot belong to an identifier
                 let mut identifier = String::new();
