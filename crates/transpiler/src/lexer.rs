@@ -35,6 +35,14 @@ fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut V
     }
 }
 
+// Helper functions that record indentation decrease(dedent) via stack
+fn record_indent_decrease(spaces: usize, levels: &mut Vec<usize>, tokens: &mut Vec<Token>) {
+    while *levels.last().unwrap() > spaces {
+        levels.pop().unwrap();
+        tokens.push(Token::Dedent);
+    }
+}
+
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
@@ -634,5 +642,27 @@ mod tests {
 
         assert_eq!(levels, vec![0, 4]);
         assert_eq!(tokens, vec![Token::Indent]);
+    }
+
+    // Test recording dedentation
+    #[test]
+    fn records_indentation_decrease() {
+        let mut levels: Vec<usize> = vec![0, 4, 8];
+        let mut tokens: Vec<Token> = Vec::new();
+
+        record_indent_decrease(4, &mut levels, &mut tokens);
+
+        assert_eq!(levels, vec![0, 4]);
+        assert_eq!(tokens, vec![Token::Dedent]);
+
+        record_indent_decrease(0, &mut levels, &mut tokens);
+
+        assert_eq!(levels, vec![0]);
+        assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
+
+        record_indent_decrease(0, &mut levels, &mut tokens);
+
+        assert_eq!(levels, vec![0]);
+        assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
     }
 }
