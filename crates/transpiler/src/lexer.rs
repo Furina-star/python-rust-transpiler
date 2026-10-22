@@ -223,7 +223,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut levels: Vec<usize> = vec![0];
     let mut saw_code_line = false;
-    let mut paren_depth: usize = 0;
+    let mut opening_lines: Vec<usize> = Vec::new();
 
     for (index, line) in source.lines().enumerate() {
         let line_number = index + 1;
@@ -233,7 +233,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             continue;
         }
 
-        let continuation = paren_depth > 0;
+        let continuation = !opening_lines.is_empty();
 
         if saw_code_line && !continuation {
             tokens.push(Token::Newline);
@@ -254,16 +254,12 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
         for token in &line_tokens {
             match token {
                 Token::LeftParen => {
-                    paren_depth += 1;
+                    opening_lines.push(line_number);
                 }
 
                 Token::RightParen => {
-                    if paren_depth == 0 {
-                        return Err(String::from(format!(
-                            "Line {line_number}: Unmatched closing parenthesis"
-                        )));
-                    } else {
-                        paren_depth -= 1;
+                    if opening_lines.pop().is_none() {
+                        return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
                     }
                 }
 
@@ -274,8 +270,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
         tokens.extend(line_tokens);
     }
 
-    if paren_depth != 0 {
-        return Err(String::from("Unclosed parenthesis"));
+    if let Some(&opening_line) = opening_lines.last() {
+        return Err(format!("Line {opening_line}: Unclosed parenthesis"));
     }
 
     record_indent_decrease(0, &mut levels, &mut tokens)?;
@@ -1045,7 +1041,7 @@ mod tests {
     fn public_tokenize_rejects_unclosed_parentheses() {
         let result = tokenize("x=(10+20");
 
-        assert_eq!(result.unwrap_err(), "Unclosed parenthesis");
+        assert_eq!(result.unwrap_err(), "Line 1: Unclosed parenthesis");
     }
 
     // Verify a valid an error with line number
@@ -1056,7 +1052,7 @@ mod tests {
         assert_eq!(error, "Line 4: Unexpected character: @");
     }
 
-    // Report inconsistent indentation on line 3
+    // Verify inconsistent indentation on line 3
     #[test]
     fn reports_inconsistent_indentation_line() {
         let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
@@ -1064,11 +1060,23 @@ mod tests {
         assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
     }
 
-    // Report unmatch closing parenthesis at line 3
+    // Verify unmatch closing parenthesis at line 3
     #[test]
     fn reports_unmatched_closing_parenthesis_line() {
         let error = tokenize("x=1\ny=2\nz=3)").unwrap_err();
 
         assert_eq!(error, "Line 3: Unmatched closing parenthesis");
+    }
+
+    // Verify unclosed nested parenthesis
+    #[test]
+    fn reports_unclosed_parenthesis_opening_line() {
+        let error = tokenize("x=1\nresult=(2+3").unwrap_err();
+
+        assert_eq!(error, "Line 2: Unclosed parenthesis");
+
+        let nested_error = tokenize("x=(\n    y=(1+2)").unwrap_err();
+
+        assert_eq!(nested_error, "Line 1: Unclosed parenthesis");
     }
 }
