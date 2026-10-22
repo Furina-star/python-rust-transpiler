@@ -77,6 +77,7 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut levels: Vec<usize> = vec![0];
     let mut saw_code_line = false;
+    let mut paren_depth: usize = 0;
 
     for line in source.lines() {
         let content = line.trim_start_matches(' ');
@@ -85,16 +86,41 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
             continue;
         }
 
-        if saw_code_line {
+        let continuation = paren_depth > 0;
+
+        if saw_code_line && !continuation {
             tokens.push(Token::Newline);
         }
 
         saw_code_line = true;
 
-        let spaces = count_leading_spaces(line);
+        if !continuation {
+            let spaces = count_leading_spaces(line);
 
-        process_indentation(spaces, &mut levels, &mut tokens)?;
-        tokens.extend(tokenize(content)?);
+            process_indentation(spaces, &mut levels, &mut tokens)?;
+        }
+
+        let line_tokens = tokenize(content)?;
+
+        for token in &line_tokens {
+            match token {
+                Token::LeftParen => {
+                    paren_depth += 1;
+                }
+
+                Token::RightParen => {
+                    if paren_depth == 0 {
+                        return Err(String::from("Unmatched closing parenthesis"));
+                    } else {
+                        paren_depth -= 1;
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        tokens.extend(line_tokens);
     }
 
     record_indent_decrease(0, &mut levels, &mut tokens)?;
