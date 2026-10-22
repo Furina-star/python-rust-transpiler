@@ -36,11 +36,23 @@ fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut V
 }
 
 // Helper functions that record indentation decrease(dedent) via stack
-fn record_indent_decrease(spaces: usize, levels: &mut Vec<usize>, tokens: &mut Vec<Token>) {
+fn record_indent_decrease(
+    spaces: usize,
+    levels: &mut Vec<usize>,
+    tokens: &mut Vec<Token>,
+) -> Result<(), String> {
+    let current = *levels.last().unwrap();
+
+    if spaces < current && !levels.contains(&spaces) {
+        return Err(format!("Inconsistent indentation: {spaces} spaces"));
+    }
+
     while *levels.last().unwrap() > spaces {
         levels.pop().unwrap();
         tokens.push(Token::Dedent);
     }
+
+    Ok(())
 }
 
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
@@ -650,19 +662,32 @@ mod tests {
         let mut levels: Vec<usize> = vec![0, 4, 8];
         let mut tokens: Vec<Token> = Vec::new();
 
-        record_indent_decrease(4, &mut levels, &mut tokens);
+        record_indent_decrease(4, &mut levels, &mut tokens).unwrap();
 
         assert_eq!(levels, vec![0, 4]);
         assert_eq!(tokens, vec![Token::Dedent]);
 
-        record_indent_decrease(0, &mut levels, &mut tokens);
+        record_indent_decrease(0, &mut levels, &mut tokens).unwrap();
 
         assert_eq!(levels, vec![0]);
         assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
 
-        record_indent_decrease(0, &mut levels, &mut tokens);
+        record_indent_decrease(0, &mut levels, &mut tokens).unwrap();
 
         assert_eq!(levels, vec![0]);
         assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
+    }
+
+    // Test that reject inconsistent indentation like 2 or 1 spaces
+    #[test]
+    fn rejects_inconsistent_indentation() {
+        let mut levels: Vec<usize> = vec![0, 4, 8];
+        let mut tokens: Vec<Token> = Vec::new();
+
+        let result = record_indent_decrease(2, &mut levels, &mut tokens);
+
+        assert!(result.is_err());
+        assert_eq!(levels, [0, 4, 8]);
+        assert!(tokens.is_empty());
     }
 }
