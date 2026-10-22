@@ -175,7 +175,6 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
             ')' => tokens.push(Token::RightParen),
             ':' => tokens.push(Token::Colon),
             ',' => tokens.push(Token::Comma),
-            '\n' => tokens.push(Token::Newline),
             '\r' => {
                 return Err(ScanError {
                     column,
