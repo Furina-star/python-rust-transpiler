@@ -1,6 +1,20 @@
-# Python-to-Rust Transpiler
+<h1 align="center">Python-to-Rust Transpiler</h1>
 
-A Python-to-Rust transpiler written in Rust, targeting a restricted, statically typed Python-like language.
+<p align="center">
+  <a href="https://github.com/Furina-star/python-rust-transpiler/actions/workflows/ci.yml">
+    <img src="https://github.com/Furina-star/python-rust-transpiler/actions/workflows/ci.yml/badge.svg" alt="Rust CI">
+  </a>
+  <a href="crates/transpiler/Cargo.toml">
+    <img src="https://img.shields.io/badge/Rust-2024_edition-orange?logo=rust" alt="Rust 2024 edition">
+  </a>
+  <a href="docs/ROADMAP.md">
+    <img src="https://img.shields.io/badge/status-in_development-yellow" alt="Status: in development">
+  </a>
+</p>
+
+<p align="center">
+  A Python-to-Rust transpiler written in Rust, targeting a restricted, statically typed Python-like language.
+</p>
 
 ## Overview
 
