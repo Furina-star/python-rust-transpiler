@@ -35,6 +35,23 @@ fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut V
     }
 }
 
+// Helper functions that process indent and dedent
+fn process_indentation(
+    spaces: usize,
+    levels: &mut Vec<usize>,
+    tokens: &mut Vec<Token>,
+) -> Result<(), String> {
+    let current = *levels.last().unwrap();
+
+    if spaces > current {
+        record_indent_decrease(spaces, levels, tokens)?;
+    } else if spaces < current {
+        record_indent_decrease(spaces, levels, tokens)?;
+    }
+
+    Ok(())
+}
+
 // Helper functions that record indentation decrease(dedent) via stack
 fn record_indent_decrease(
     spaces: usize,
@@ -690,4 +707,32 @@ mod tests {
         assert_eq!(levels, [0, 4, 8]);
         assert!(tokens.is_empty());
     }
+
+    // Test that validates indentation transitions
+    #[test]
+    fn processes_indentation_transitions() {
+        let mut levels: Vec<usize> = vec![0];
+        let mut tokens: Vec<Token> = Vec::new();
+
+        // Increase indentation from 0 to 4
+        process_indentation(4, &mut levels, &mut tokens).unwrap();
+
+        assert_eq!(levels, vec![0, 4]);
+        assert_eq!(tokens, vec![Token::Indent]);
+
+        // Stay at indentation level 4
+        process_indentation(4, &mut levels, &mut tokens).unwrap();
+
+        // TODO:
+        // Assert levels is still [0, 4].
+        // Assert tokens still contains one Indent.
+
+        // Decrease indentation from 4 to 0
+        process_indentation(0, &mut levels, &mut tokens).unwrap();
+
+        // TODO:
+        // Assert levels is now [0].
+        // Assert tokens contains Indent, then Dedent.
+    }
+
 }
