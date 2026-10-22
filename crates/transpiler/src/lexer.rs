@@ -108,8 +108,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     "else" => Token::Else,
                     "while" => Token::While,
                     "and" => Token::And,
-                    "or" => Token:: Or,
-                    "not" => Token:: Not,
+                    "or" => Token::Or,
+                    "not" => Token::Not,
                     _ => Token::Identifier(identifier),
                 };
 
@@ -406,7 +406,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Keyword-prefix mistakes
+    // Test keyword-prefix mistakes
     #[test]
     fn recognizes_control_flow_keyword_boundaries() {
         let actual = tokenize("if iffy elsewhere while_loop").unwrap();
@@ -416,6 +416,30 @@ mod tests {
             Token::Identifier(String::from("iffy")),
             Token::Identifier(String::from("elsewhere")),
             Token::Identifier(String::from("while_loop")),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test logical keywords
+    #[test]
+    fn tokenizes_logical_keywords() {
+        let actual = tokenize("and or not").unwrap();
+
+        let expected = vec![Token::And, Token::Or, Token::Not];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test logical keyword boundaries
+    #[test]
+    fn recognizes_logical_keyword_boundaries() {
+        let actual = tokenize("android origin noteworthy").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("android")),
+            Token::Identifier(String::from("origin")),
+            Token::Identifier(String::from("noteworthy")),
         ];
 
         assert_eq!(actual, expected);
