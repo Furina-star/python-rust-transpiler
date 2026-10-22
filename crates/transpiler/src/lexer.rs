@@ -1,16 +1,16 @@
 use crate::token::Token;
 
-// Helper function that checks if the start of a string is a valid identifier
+// Check the first identifier character.
 fn is_identifier_start(ch: char) -> bool {
     ch.is_ascii_alphabetic() || ch == '_'
 }
 
-// Helper function that checks if the continuations character is also valid
+// Check subsequent identifier characters.
 fn is_identifier_continue(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_'
 }
 
-// Helper function that counts leading spaces
+// Count leading spaces.
 fn count_leading_spaces(line: &str) -> usize {
     let mut spaces: usize = 0;
 
@@ -25,7 +25,7 @@ fn count_leading_spaces(line: &str) -> usize {
     spaces
 }
 
-// Helper functions that record indentation increase via stack
+// Push a new indentation level and emit Indent.
 fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut Vec<Token>) {
     let current = *levels.last().unwrap();
 
@@ -35,7 +35,7 @@ fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut V
     }
 }
 
-// Helper functions that process indent and dedent
+// Process indentation changes.
 fn process_indentation(
     spaces: usize,
     levels: &mut Vec<usize>,
@@ -52,7 +52,7 @@ fn process_indentation(
     Ok(())
 }
 
-// Helper functions that record indentation decrease(dedent) via stack
+// Validate dedentation, pop levels, and emit Dedent tokens.
 fn record_indent_decrease(
     spaces: usize,
     levels: &mut Vec<usize>,
@@ -72,15 +72,35 @@ fn record_indent_decrease(
     Ok(())
 }
 
+// Tokenize lines with newlines and indentation.
+fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
+    let mut tokens: Vec<Token> = Vec::new();
+    let mut levels: Vec<usize> = vec![0];
+
+    for (index, line) in source.lines().enumerate() {
+        if index > 0 {
+            tokens.push(Token::Newline);
+        }
+
+        let spaces = count_leading_spaces(line);
+        process_indentation(spaces, &mut levels, &mut tokens)?;
+
+        let content = line.trim_start_matches(' ');
+        tokens.extend(tokenize(content)?);
+    }
+
+    Ok(tokens)
+}
+
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
 
-    // Lookahead loop where it peeks the next upcoming character
+    // Read characters with lookahead as needed.
     while let Some(ch) = chars.next() {
         match ch {
             '0'..='9' => {
-                // Group and collects ascii digits together
+                // Collect consecutive ASCII digits.
                 let mut digits = String::new();
                 digits.push(ch);
 
@@ -93,14 +113,14 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
 
-                // Convert grouped ascii digits and append it
+                // Parse digits and emit an integer token.
                 let value = digits.parse::<i32>().map_err(|e| e.to_string())?;
                 let token = Token::Integer(value);
                 tokens.push(token);
             }
             '+' => tokens.push(Token::Plus),
             '-' => {
-                // Check if -> can be collected as arrow else minus
+                // Distinguish arrow from minus.
                 if chars.peek() == Some(&'>') {
                     chars.next();
                     tokens.push(Token::Arrow);
@@ -110,7 +130,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             }
             '*' => tokens.push(Token::Star),
             '/' => {
-                // Lookahead implementation for FloorDivide and Slash
+                // Distinguish floor division from division.
                 if chars.peek() == Some(&'/') {
                     chars.next();
                     tokens.push(Token::FloorDivide);
@@ -120,7 +140,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             }
             '%' => tokens.push(Token::Percent),
             '=' => {
-                // Check if it's an equality else assignment
+                // Distinguish equality from assignment.
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::EqualEqual);
@@ -129,7 +149,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             '<' => {
-                // Check if it's Less than Equal <= else Less than <
+                // Distinguish <= from <.
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::LessEqual);
@@ -138,7 +158,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             '>' => {
-                // Check if it's Greater than Equal >= else Greater than >
+                // Distinguish >= from >.
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::GreaterEqual);
@@ -147,7 +167,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             '!' => {
-                // Check if it's Not Equal != else error
+                // Accept != and reject a standalone !.
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::NotEqual);
@@ -169,7 +189,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             c if is_identifier_start(c) => {
-                // Maximal munch where it detects a reserved keyword until the next character cannot belong to an identifier
+                // Collect the full identifier.
                 let mut identifier = String::new();
                 identifier.push(c);
 
@@ -182,7 +202,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
 
-                // Append matching keywords else identifiers
+                // Classify keywords, booleans, and identifiers.
                 let token = match identifier.as_str() {
                     "def" => Token::Def,
                     "return" => Token::Return,
@@ -210,7 +230,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
 mod tests {
     use super::*;
 
-    // Test tokenization for Plus and Minus
+    // Verify plus and minus tokens.
     #[test]
     fn tokenizes_plus_and_minus() {
         let actual = tokenize("+ - +").unwrap();
@@ -220,7 +240,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test for invalid characters such as @
+    // Reject invalid characters.
     #[test]
     fn reject_invalid_character() {
         let error = tokenize("@").unwrap_err();
@@ -228,7 +248,7 @@ mod tests {
         assert_eq!(error, "Unexpected character: @");
     }
 
-    // Test grouped tokenized ascii digits
+    // Verify integer literal tokens.
     #[test]
     fn tokenizes_integer_literals() {
         let actual = tokenize("123+45").unwrap();
@@ -238,7 +258,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test for integer overflow, upper bound of i32 or signed 32-bit integer
+    // Reject integers above the i32 limit.
     #[test]
     fn rejects_integer_overflow() {
         let result = tokenize("2147483648");
@@ -246,7 +266,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Test mixed arithmetics
+    // Verify mixed arithmetic tokens.
     #[test]
     fn tokenizes_mixed_arithmetic() {
         let actual = tokenize("0  + 12 - 003").unwrap();
@@ -262,7 +282,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test for empty input
+    // Handle empty input.
     #[test]
     fn handles_empty_input() {
         let actual = tokenize("").unwrap();
@@ -270,7 +290,7 @@ mod tests {
         assert!(actual.is_empty());
     }
 
-    // Test whitespaces
+    // Ignore spaces.
     #[test]
     fn handles_spaces_only() {
         let actual = tokenize("     ").unwrap();
@@ -278,7 +298,7 @@ mod tests {
         assert!(actual.is_empty());
     }
 
-    // Test invalid character after a valid tokens
+    // Reject invalid characters after valid tokens.
     #[test]
     fn rejects_invalid_character_after_valid_tokens() {
         let error = tokenize("123+@").unwrap_err();
@@ -286,7 +306,7 @@ mod tests {
         assert_eq!(error, "Unexpected character: @");
     }
 
-    // Test starting characters
+    // Validate identifier start characters.
     #[test]
     fn recognizes_identifier_start_characters() {
         assert!(is_identifier_start('h'));
@@ -297,7 +317,7 @@ mod tests {
         assert!(!is_identifier_start('+'));
     }
 
-    // Test the continuation characters
+    // Validate identifier continuation characters.
     #[test]
     fn recognizes_identifier_continuation_characters() {
         assert!(is_identifier_continue('a'));
@@ -309,7 +329,7 @@ mod tests {
         assert!(!is_identifier_continue(' '));
     }
 
-    // Test for identifiers
+    // Verify identifier tokens.
     #[test]
     fn tokenizes_identifiers() {
         let actual = tokenize("health player _total").unwrap();
@@ -336,7 +356,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test recognize keyword boundaries
+    // Distinguish keywords from longer identifiers.
     #[test]
     fn recognizes_keyword_boundaries() {
         let actual = tokenize("def defense return returnValue player1").unwrap();
@@ -352,7 +372,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Punctuations
+    // Verify punctuation tokens.
     #[test]
     fn tokenizes_punctuation() {
         let actual = tokenize("(:,)").unwrap();
@@ -367,7 +387,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test arrows and minus token
+    // Verify arrow and minus tokens.
     #[test]
     fn tokenizes_arrow_and_minus() {
         let actual = tokenize("-> -").unwrap();
@@ -377,7 +397,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test arrow in a function
+    // Verify return annotation tokens.
     #[test]
     fn tokenizes_return_annotation() {
         let actual = tokenize("add->int").unwrap();
@@ -391,7 +411,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test the assignment equal(=) operator
+    // Verify assignment (=) tokens.
     #[test]
     fn tokenizes_assignment() {
         let actual = tokenize("health=100").unwrap();
@@ -405,7 +425,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test the equality(==) operator
+    // Verify equality (==) tokens.
     #[test]
     fn tokenizes_equality() {
         let actual = tokenize("health==100").unwrap();
@@ -419,7 +439,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Less and LessEqual operators
+    // Verify < and <= tokens.
     #[test]
     fn tokenizes_less_comparisons() {
         let actual = tokenize("a<10 b<=20").unwrap();
@@ -436,7 +456,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Greater and GreaterEqual operators
+    // Verify > and >= tokens.
     #[test]
     fn tokenizes_greater_comparisons() {
         let actual = tokenize("a>10 b>=20").unwrap();
@@ -453,7 +473,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test valid inequality (!=)
+    // Verify inequality (!=) tokens.
     #[test]
     fn tokenizes_inequality() {
         let actual = tokenize("health!=100").unwrap();
@@ -467,7 +487,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test invalid standalone exclamation mark(!)
+    // Reject a standalone exclamation mark (!).
     #[test]
     fn rejects_standalone_exclamation() {
         let error = tokenize("!").unwrap_err();
@@ -475,7 +495,7 @@ mod tests {
         assert_eq!(error, "Unexpected character: !");
     }
 
-    // Test recognized control-flow keywords
+    // Verify control flow keywords.
     #[test]
     fn tokenizes_control_flow_keywords() {
         let actual = tokenize("if health else while").unwrap();
@@ -490,7 +510,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test keyword-prefix mistakes
+    // Preserve identifiers with control flow keyword prefixes.
     #[test]
     fn recognizes_control_flow_keyword_boundaries() {
         let actual = tokenize("if iffy elsewhere while_loop").unwrap();
@@ -505,7 +525,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test logical keywords
+    // Verify logical keywords.
     #[test]
     fn tokenizes_logical_keywords() {
         let actual = tokenize("and or not").unwrap();
@@ -515,7 +535,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test logical keyword boundaries
+    // Preserve identifiers with logical keyword prefixes.
     #[test]
     fn recognizes_logical_keyword_boundaries() {
         let actual = tokenize("android origin noteworthy").unwrap();
@@ -529,7 +549,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test boolean literals
+    // Verify boolean literals.
     #[test]
     fn tokenizes_boolean_literals() {
         let actual = tokenize("True False not True").unwrap();
@@ -544,7 +564,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test boolean literal boundaries
+    // Check boolean boundaries and case sensitivity.
     #[test]
     fn recognizes_boolean_literal_boundaries() {
         let actual = tokenize("TrueValue False_alarm true").unwrap();
@@ -558,7 +578,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test multiplication alongside an integer, identifier, and addition
+    // Verify multiplication in an expression.
     #[test]
     fn tokenizes_multiplication() {
         let actual = tokenize("2*damage+3").unwrap();
@@ -574,7 +594,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test recognizing all three division operators
+    // Verify division, floor division, and modulo tokens.
     #[test]
     fn tokenizes_division_operators() {
         let actual = tokenize("7/2 7//2 7%2").unwrap();
@@ -594,7 +614,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test a divmod() function from Python
+    // Verify divmod call tokens.
     #[test]
     fn tokenizes_divmod_call_syntax() {
         let actual = tokenize("divmod(7,2)").unwrap();
@@ -611,7 +631,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Unix-style line endings
+    // Verify Unix line endings.
     #[test]
     fn tokenizes_newlines() {
         let actual = tokenize("x=10\ny=20").unwrap();
@@ -629,7 +649,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test Windows-style line endings
+    // Verify Windows line endings.
     #[test]
     fn tokenizes_windows_newlines() {
         let actual = tokenize("x=10\r\ny=20").unwrap();
@@ -647,7 +667,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test count leading spaces
+    // Verify leading space counts.
     #[test]
     fn counts_leading_spaces() {
         assert_eq!(count_leading_spaces("    x = 10"), 4);
@@ -656,7 +676,7 @@ mod tests {
         assert_eq!(count_leading_spaces(""), 0);
     }
 
-    // Test recording indentation
+    // Verify increased and unchanged indentation.
     #[test]
     fn records_indentation_increase() {
         let mut levels: Vec<usize> = vec![0];
@@ -673,7 +693,7 @@ mod tests {
         assert_eq!(tokens, vec![Token::Indent]);
     }
 
-    // Test recording dedentation
+    // Verify decreased and unchanged indentation.
     #[test]
     fn records_indentation_decrease() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
@@ -695,7 +715,7 @@ mod tests {
         assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
     }
 
-    // Test that reject inconsistent indentation like 2 or 1 spaces
+    // Reject dedentation to an unknown level.
     #[test]
     fn rejects_inconsistent_indentation() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
@@ -708,7 +728,7 @@ mod tests {
         assert!(tokens.is_empty());
     }
 
-    // Test that validates indentation transitions
+    // Verify valid indentation transitions.
     #[test]
     fn processes_indentation_transitions() {
         let mut levels: Vec<usize> = vec![0];
@@ -730,22 +750,52 @@ mod tests {
         assert_eq!(tokens, vec![Token::Indent, Token::Dedent]);
     }
 
-    // Test that rejects invalid indentations
+    // Reject invalid indentation transitions.
     #[test]
     fn rejects_invalid_indentation_transition() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
         let mut tokens: Vec<Token> = Vec::new();
 
-        let result = process_indentation(
-            2,
-            &mut levels,
-            &mut tokens,
-        );
+        let result = process_indentation(2, &mut levels, &mut tokens);
 
         assert!(result.is_err());
         assert_eq!(levels, vec![0, 4, 8]);
         assert!(tokens.is_empty());
     }
 
+    // Verify indentation across lines.
+    #[test]
+    fn tokenizes_multiline_indentation() {
+        let source = "if x:\n    y=1\nz=2";
 
+        let actual = tokenize_multiline(source).unwrap();
+
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("x")),
+            Token::Colon,
+            Token::Newline,
+            Token::Indent,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(1),
+            Token::Newline,
+            Token::Dedent,
+            Token::Identifier(String::from("z")),
+            Token::Equal,
+            Token::Integer(2),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Reject inconsistent indentation across lines.
+    #[test]
+    fn rejects_invalid_multiline_indentation() {
+        let source = "if x:\n    y=1\n  z=2";
+
+        let result = tokenize_multiline(source);
+
+        assert!(result.is_err());
+    }
 }
