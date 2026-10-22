@@ -44,7 +44,7 @@ fn process_indentation(
     let current = *levels.last().unwrap();
 
     if spaces > current {
-        record_indent_decrease(spaces, levels, tokens)?;
+        record_indent_increase(spaces, levels, tokens);
     } else if spaces < current {
         record_indent_decrease(spaces, levels, tokens)?;
     }
@@ -714,25 +714,38 @@ mod tests {
         let mut levels: Vec<usize> = vec![0];
         let mut tokens: Vec<Token> = Vec::new();
 
-        // Increase indentation from 0 to 4
         process_indentation(4, &mut levels, &mut tokens).unwrap();
 
         assert_eq!(levels, vec![0, 4]);
         assert_eq!(tokens, vec![Token::Indent]);
 
-        // Stay at indentation level 4
         process_indentation(4, &mut levels, &mut tokens).unwrap();
 
-        // TODO:
-        // Assert levels is still [0, 4].
-        // Assert tokens still contains one Indent.
+        assert_eq!(levels, vec![0, 4]);
+        assert_eq!(tokens, vec![Token::Indent]);
 
-        // Decrease indentation from 4 to 0
         process_indentation(0, &mut levels, &mut tokens).unwrap();
 
-        // TODO:
-        // Assert levels is now [0].
-        // Assert tokens contains Indent, then Dedent.
+        assert_eq!(levels, vec![0]);
+        assert_eq!(tokens, vec![Token::Indent, Token::Dedent]);
     }
+
+    // Test that rejects invalid indentations
+    #[test]
+    fn rejects_invalid_indentation_transition() {
+        let mut levels: Vec<usize> = vec![0, 4, 8];
+        let mut tokens: Vec<Token> = Vec::new();
+
+        let result = process_indentation(
+            2,
+            &mut levels,
+            &mut tokens,
+        );
+
+        assert!(result.is_err());
+        assert_eq!(levels, vec![0, 4, 8]);
+        assert!(tokens.is_empty());
+    }
+
 
 }
