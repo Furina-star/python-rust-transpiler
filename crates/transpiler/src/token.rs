@@ -45,6 +45,8 @@ pub enum Token {
     // Boolean Literals
     Boolean(bool),
 
-    // Escape Sequences
+    // Layout and structural
     Newline,
+    Indent,
+    Dedent,
 }

@@ -10,6 +10,31 @@ fn is_identifier_continue(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_'
 }
 
+// Helper function that counts leading spaces
+fn count_leading_spaces(line: &str) -> usize {
+    let mut spaces: usize = 0;
+
+    for ch in line.chars() {
+        if ch == ' ' {
+            spaces += 1;
+        } else {
+            break;
+        }
+    }
+
+    spaces
+}
+
+// Helper functions that record indentation increase via stack
+fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut Vec<Token>) {
+    let current = *levels.last().unwrap();
+
+    if spaces > current {
+        levels.push(spaces);
+        tokens.push(Token::Indent);
+    }
+}
+
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
@@ -583,5 +608,31 @@ mod tests {
         ];
 
         assert_eq!(actual, expected);
+    }
+
+    // Test count leading spaces
+    #[test]
+    fn counts_leading_spaces() {
+        assert_eq!(count_leading_spaces("    x = 10"), 4);
+        assert_eq!(count_leading_spaces("x = 10"), 0);
+        assert_eq!(count_leading_spaces("  x = 10"), 2);
+        assert_eq!(count_leading_spaces(""), 0);
+    }
+
+    // Test recording indentation
+    #[test]
+    fn records_indentation_increase() {
+        let mut levels: Vec<usize> = vec![0];
+        let mut tokens: Vec<Token> = Vec::new();
+
+        record_indent_increase(4, &mut levels, &mut tokens);
+
+        assert_eq!(levels, vec![0, 4]);
+        assert_eq!(tokens, vec![Token::Indent]);
+
+        record_indent_increase(4, &mut levels, &mut tokens);
+
+        assert_eq!(levels, vec![0, 4]);
+        assert_eq!(tokens, vec![Token::Indent]);
     }
 }
