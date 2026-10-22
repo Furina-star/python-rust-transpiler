@@ -111,7 +111,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     "or" => Token::Or,
                     "not" => Token::Not,
                     "True" => Token::Boolean(true),
-                    "False" => Token::Boolean(true),
+                    "False" => Token::Boolean(false),
                     _ => Token::Identifier(identifier),
                 };
 
@@ -455,7 +455,7 @@ mod tests {
         let expected = vec![
             Token::Boolean(true),
             Token::Boolean(false),
-            Token::Or,
+            Token::Not,
             Token::Boolean(true),
         ];
 
@@ -470,10 +470,9 @@ mod tests {
         let expected = vec![
             Token::Identifier(String::from("TrueValue")),
             Token::Identifier(String::from("False_alarm")),
-            Token::Boolean(true),
+            Token::Identifier(String::from("true")),
         ];
 
         assert_eq!(actual, expected);
     }
-
 }
