@@ -80,7 +80,7 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
 
     for line in source.lines() {
         if line.trim_matches(' ').is_empty() {
-            continue
+            continue;
         }
 
         if saw_code_line {
@@ -95,6 +95,8 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
         let content = line.trim_start_matches(' ');
         tokens.extend(tokenize(content)?);
     }
+
+    record_indent_decrease(0, &mut levels, &mut tokens)?;
 
     Ok(tokens)
 }
@@ -806,7 +808,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Validate empty lines to be ignored
+    // Verify empty lines to be ignored
     #[test]
     fn ignores_blank_lines_in_blocks() {
         let source = "if x:\n    y=1\n\n    z=2\nw=3";
@@ -836,7 +838,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Validates unwanted newline token before the first real statement
+    // Verify unwanted newline token before the first real statement
     #[test]
     fn ignores_leading_blank_lines() {
         let actual = tokenize_multiline("\n    \nx=10").unwrap();
@@ -850,5 +852,31 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
+    // Verify one close remaining block
+    #[test]
+    fn closes_indentation_at_eof() {
+        let actual = tokenize_multiline("if x:\n    y=1").unwrap();
 
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("x")),
+            Token::Colon,
+            Token::Newline,
+            Token::Indent,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(1),
+            Token::Dedent,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Verify multiple close nested blocks
+    #[test]
+    fn closes_nested_indentation_at_eof() {
+        let actual = tokenize_multiline("if x:\n    if y:\n        z=1").unwrap();
+
+        assert!(actual.ends_with(&[Token::Dedent, Token::Dedent]));
+    }
 }
