@@ -72,20 +72,28 @@ fn record_indent_decrease(
     Ok(())
 }
 
+#[derive(Debug)]
+struct ScanError {
+    column: usize,
+    message: String,
+}
+
 // Convert a single line into tokens, ignoring spaces and comments.
-fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
+fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
     let mut tokens = Vec::new();
-    let mut chars = source.chars().peekable();
+    let mut chars = source.chars().enumerate().peekable();
 
     // Read characters with lookahead as needed.
-    while let Some(ch) = chars.next() {
+    while let Some((index, ch)) = chars.next() {
+        let column = index + 1;
+
         match ch {
             '0'..='9' => {
                 // Collect consecutive ASCII digits.
                 let mut digits = String::new();
                 digits.push(ch);
 
-                while let Some(&next_ch) = chars.peek() {
+                while let Some(&(_, next_ch)) = chars.peek() {
                     if next_ch.is_ascii_digit() {
                         digits.push(next_ch);
                         chars.next();
@@ -95,14 +103,17 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
                 }
 
                 // Parse digits and emit an integer token.
-                let value = digits.parse::<i32>().map_err(|e| e.to_string())?;
+                let value = digits.parse::<i32>().map_err(|e| ScanError {
+                    column,
+                    message: e.to_string(),
+                })?;
                 let token = Token::Integer(value);
                 tokens.push(token);
             }
             '+' => tokens.push(Token::Plus),
             '-' => {
                 // Distinguish arrow from minus.
-                if chars.peek() == Some(&'>') {
+                if matches!(chars.peek(), Some(&(_, '>'))) {
                     chars.next();
                     tokens.push(Token::Arrow);
                 } else {
@@ -112,7 +123,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             '*' => tokens.push(Token::Star),
             '/' => {
                 // Distinguish floor division from division.
-                if chars.peek() == Some(&'/') {
+                if matches!(chars.peek(), Some(&(_, '/'))) {
                     chars.next();
                     tokens.push(Token::FloorDivide);
                 } else {
@@ -122,7 +133,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             '%' => tokens.push(Token::Percent),
             '=' => {
                 // Distinguish equality from assignment.
-                if chars.peek() == Some(&'=') {
+                if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
                     tokens.push(Token::EqualEqual);
                 } else {
@@ -131,7 +142,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             }
             '<' => {
                 // Distinguish <= from <.
-                if chars.peek() == Some(&'=') {
+                if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
                     tokens.push(Token::LessEqual);
                 } else {
@@ -140,7 +151,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             }
             '>' => {
                 // Distinguish >= from >.
-                if chars.peek() == Some(&'=') {
+                if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
                     tokens.push(Token::GreaterEqual);
                 } else {
@@ -149,11 +160,14 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             }
             '!' => {
                 // Accept != and reject a standalone !.
-                if chars.peek() == Some(&'=') {
+                if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
                     tokens.push(Token::NotEqual);
                 } else {
-                    return Err(format!("Unexpected character: {ch}"));
+                    return Err(ScanError {
+                        column,
+                        message: format!("Unexpected character: {ch}"),
+                    });
                 }
             }
             '(' => tokens.push(Token::LeftParen),
@@ -162,11 +176,14 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
             ',' => tokens.push(Token::Comma),
             '\n' => tokens.push(Token::Newline),
             '\r' => {
-                if chars.peek() == Some(&'\n') {
+                if matches!(chars.peek(), Some(&(_, '\n'))) {
                     chars.next();
                     tokens.push(Token::Newline);
                 } else {
-                    return Err(String::from("Unexpected carriage return"));
+                    return Err(ScanError {
+                        column,
+                        message: String::from("Unexpected carriage return"),
+                    });
                 }
             }
             c if is_identifier_start(c) => {
@@ -174,7 +191,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
                 let mut identifier = String::new();
                 identifier.push(c);
 
-                while let Some(&next_ch) = chars.peek() {
+                while let Some(&(_, next_ch)) = chars.peek() {
                     if is_identifier_continue(next_ch) {
                         identifier.push(next_ch);
                         chars.next();
@@ -201,8 +218,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
                 tokens.push(token);
             }
             '#' => {
-                // Ignore # preserve the new lines
-                while let Some(&next_ch) = chars.peek() {
+                while let Some(&(_, next_ch)) = chars.peek() {
                     if next_ch == '\n' || next_ch == '\r' {
                         break;
                     } else {
@@ -210,9 +226,19 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
                     }
                 }
             }
-            '\t' => return Err(String::from("Tabs are not supported; use spaces")),
+            '\t' => {
+                return Err(ScanError {
+                    column,
+                    message: String::from("Tabs are not supported; use spaces"),
+                });
+            }
             ' ' => {}
-            _ => return Err(format!("Unexpected character: {ch}")),
+            _ => {
+                return Err(ScanError {
+                    column,
+                    message: format!("Unexpected character: {ch}"),
+                });
+            }
         }
     }
     Ok(tokens)
@@ -248,8 +274,12 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 .map_err(|message| format!("Line {line_number}: {message}"))?;
         }
 
-        let line_tokens =
-            tokenize_line(content).map_err(|message| format!("Line {line_number}: {message}"))?;
+        let line_tokens = tokenize_line(line).map_err(|error| {
+            format!(
+                "Line {line_number}, Column {}: {}",
+                error.column, error.message
+            )
+        })?;
 
         for token in &line_tokens {
             match token {
@@ -298,7 +328,7 @@ mod tests {
     fn reject_invalid_character() {
         let error = tokenize("@").unwrap_err();
 
-        assert_eq!(error, "Line 1: Unexpected character: @");
+        assert_eq!(error, "Line 1, Column 1: Unexpected character: @");
     }
 
     // Check that consecutive digits form integer tokens.
@@ -356,7 +386,7 @@ mod tests {
     fn rejects_invalid_character_after_valid_tokens() {
         let error = tokenize("123+@").unwrap_err();
 
-        assert_eq!(error, "Line 1: Unexpected character: @");
+        assert_eq!(error, "Line 1, Column 5: Unexpected character: @");
     }
 
     // Check that identifiers can start with a letter or underscore, but not a digit.
@@ -546,7 +576,7 @@ mod tests {
     fn rejects_standalone_exclamation() {
         let error = tokenize("!").unwrap_err();
 
-        assert_eq!(error, "Line 1: Unexpected character: !");
+        assert_eq!(error, "Line 1, Column 1: Unexpected character: !");
     }
 
     // Check that if, else, and while are recognized as keywords.
@@ -976,7 +1006,10 @@ mod tests {
     fn rejects_tab_indentation() {
         let error = tokenize("if x:\n\ty=1").unwrap_err();
 
-        assert_eq!(error, "Line 2: Tabs are not supported; use spaces");
+        assert_eq!(
+            error,
+            "Line 2, Column 1: Tabs are not supported; use spaces"
+        );
     }
 
     // Check that line breaks inside parentheses add no newline or indentation tokens.
@@ -1050,7 +1083,7 @@ mod tests {
     fn reports_invalid_character_line() {
         let error = tokenize("x=1\n\n# comment\ny=@").unwrap_err();
 
-        assert_eq!(error, "Line 4: Unexpected character: @");
+        assert_eq!(error, "Line 4, Column 3: Unexpected character: @");
     }
 
     // Check that an indentation error reports the line number and space count.
@@ -1099,5 +1132,19 @@ mod tests {
         let actual = tokenize("# First comment\n    # Second comment\n\n").unwrap();
 
         assert!(actual.is_empty());
+    }
+
+    #[test]
+    fn reports_invalid_character_column() {
+        let error = tokenize("x=1\n  y=@").unwrap_err();
+
+        assert_eq!(error, "Line 2, Column 5: Unexpected character: @");
+    }
+
+    #[test]
+    fn reports_integer_overflow_column() {
+        let error = tokenize("x=1\n  y=2147483648").unwrap_err();
+
+        assert!(error.starts_with("Line 2, Column 5:"));
     }
 }
