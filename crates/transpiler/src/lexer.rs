@@ -47,11 +47,30 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             '=' => {
+                // Check if it's an equality else assignment
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::EqualEqual);
                 } else {
                     tokens.push(Token::Equal);
+                }
+            }
+            '<' => {
+                // Check if it's Less than Equal <= else Less than <
+                if chars.peek() == Some(&'=') {
+                    chars.next();
+                    tokens.push(Token::LessEqual);
+                } else {
+                    tokens.push(Token::Less);
+                }
+            }
+            '>' => {
+                // Check if it's Greater than Equal >= else Greater than >
+                if chars.peek() == Some(&'=') {
+                    chars.next();
+                    tokens.push(Token::GreaterEqual);
+                } else {
+                    tokens.push(Token::Greater);
                 }
             }
             '(' => tokens.push(Token::LeftParen),

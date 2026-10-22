@@ -13,4 +13,8 @@ pub enum Token {
     Comma,
     Equal,
     EqualEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
 }
