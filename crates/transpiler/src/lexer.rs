@@ -283,7 +283,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
 mod tests {
     use super::*;
 
-    // Verify plus and minus tokens.
+    // Check that plus and minus signs produce the correct tokens.
     #[test]
     fn tokenizes_plus_and_minus() {
         let actual = tokenize("+ - +").unwrap();
@@ -293,7 +293,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Reject invalid characters.
+    // Check that an invalid character returns an error.
     #[test]
     fn reject_invalid_character() {
         let error = tokenize("@").unwrap_err();
@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(error, "Line 1: Unexpected character: @");
     }
 
-    // Verify integer literal tokens.
+    // Check that consecutive digits form integer tokens.
     #[test]
     fn tokenizes_integer_literals() {
         let actual = tokenize("123+45").unwrap();
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Reject integers above the i32 limit.
+    // Check that integers above the i32 limit return an error.
     #[test]
     fn rejects_integer_overflow() {
         let result = tokenize("2147483648");
@@ -319,7 +319,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Verify mixed arithmetic tokens.
+    // Check arithmetic tokens with extra spaces and leading zeros.
     #[test]
     fn tokenizes_mixed_arithmetic() {
         let actual = tokenize("0  + 12 - 003").unwrap();
@@ -335,7 +335,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Handle empty input.
+    // Check that empty input produces no tokens.
     #[test]
     fn handles_empty_input() {
         let actual = tokenize("").unwrap();
@@ -343,7 +343,7 @@ mod tests {
         assert!(actual.is_empty());
     }
 
-    // Ignore spaces.
+    // Check that input containing only spaces produces no tokens.
     #[test]
     fn handles_spaces_only() {
         let actual = tokenize("     ").unwrap();
@@ -351,7 +351,7 @@ mod tests {
         assert!(actual.is_empty());
     }
 
-    // Reject invalid characters after valid tokens.
+    // Check that an invalid character after valid tokens still returns an error.
     #[test]
     fn rejects_invalid_character_after_valid_tokens() {
         let error = tokenize("123+@").unwrap_err();
@@ -359,7 +359,7 @@ mod tests {
         assert_eq!(error, "Line 1: Unexpected character: @");
     }
 
-    // Validate identifier start characters.
+    // Check that identifiers can start with a letter or underscore, but not a digit.
     #[test]
     fn recognizes_identifier_start_characters() {
         assert!(is_identifier_start('h'));
@@ -370,7 +370,7 @@ mod tests {
         assert!(!is_identifier_start('+'));
     }
 
-    // Validate identifier continuation characters.
+    // Check that letters, digits, and underscores can continue an identifier.
     #[test]
     fn recognizes_identifier_continuation_characters() {
         assert!(is_identifier_continue('a'));
@@ -382,7 +382,7 @@ mod tests {
         assert!(!is_identifier_continue(' '));
     }
 
-    // Verify identifier tokens.
+    // Check that names produce identifier tokens.
     #[test]
     fn tokenizes_identifiers() {
         let actual = tokenize("health player _total").unwrap();
@@ -396,6 +396,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
+    // Check that def and return are recognized as keywords.
     #[test]
     fn tokenizes_keywords() {
         let actual = tokenize("def return health").unwrap();
@@ -409,7 +410,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Distinguish keywords from longer identifiers.
+    // Check that names starting with def or return remain identifiers.
     #[test]
     fn recognizes_keyword_boundaries() {
         let actual = tokenize("def defense return returnValue player1").unwrap();
@@ -425,7 +426,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify punctuation tokens.
+    // Check that parentheses, colons, and commas produce the correct tokens.
     #[test]
     fn tokenizes_punctuation() {
         let actual = tokenize("(:,)").unwrap();
@@ -440,7 +441,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify arrow and minus tokens.
+    // Check that an arrow and a minus sign produce different tokens.
     #[test]
     fn tokenizes_arrow_and_minus() {
         let actual = tokenize("-> -").unwrap();
@@ -450,7 +451,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify return annotation tokens.
+    // Check the tokens for an arrow followed by a return type.
     #[test]
     fn tokenizes_return_annotation() {
         let actual = tokenize("add->int").unwrap();
@@ -464,7 +465,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify assignment (=) tokens.
+    // Check that a single equals sign produces an assignment token.
     #[test]
     fn tokenizes_assignment() {
         let actual = tokenize("health=100").unwrap();
@@ -478,7 +479,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify equality (==) tokens.
+    // Check that two equals signs produce an equality token.
     #[test]
     fn tokenizes_equality() {
         let actual = tokenize("health==100").unwrap();
@@ -492,7 +493,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify < and <= tokens.
+    // Check that < and <= produce the correct comparison tokens.
     #[test]
     fn tokenizes_less_comparisons() {
         let actual = tokenize("a<10 b<=20").unwrap();
@@ -509,7 +510,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify > and >= tokens.
+    // Check that > and >= produce the correct comparison tokens.
     #[test]
     fn tokenizes_greater_comparisons() {
         let actual = tokenize("a>10 b>=20").unwrap();
@@ -526,7 +527,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify inequality (!=) tokens.
+    // Check that != produces an inequality token.
     #[test]
     fn tokenizes_inequality() {
         let actual = tokenize("health!=100").unwrap();
@@ -540,7 +541,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Reject a standalone exclamation mark (!).
+    // Check that an exclamation mark without an equals sign returns an error.
     #[test]
     fn rejects_standalone_exclamation() {
         let error = tokenize("!").unwrap_err();
@@ -548,7 +549,7 @@ mod tests {
         assert_eq!(error, "Line 1: Unexpected character: !");
     }
 
-    // Verify control flow keywords.
+    // Check that if, else, and while are recognized as keywords.
     #[test]
     fn tokenizes_control_flow_keywords() {
         let actual = tokenize("if health else while").unwrap();
@@ -563,7 +564,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Preserve identifiers with control flow keyword prefixes.
+    // Check that names starting with if, else, or while remain identifiers.
     #[test]
     fn recognizes_control_flow_keyword_boundaries() {
         let actual = tokenize("if iffy elsewhere while_loop").unwrap();
@@ -578,7 +579,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify logical keywords.
+    // Check that and, or, and not are recognized as keywords.
     #[test]
     fn tokenizes_logical_keywords() {
         let actual = tokenize("and or not").unwrap();
@@ -588,7 +589,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Preserve identifiers with logical keyword prefixes.
+    // Check that names beginning with logical keywords remain identifiers.
     #[test]
     fn recognizes_logical_keyword_boundaries() {
         let actual = tokenize("android origin noteworthy").unwrap();
@@ -602,7 +603,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify boolean literals.
+    // Check that True and False produce boolean tokens.
     #[test]
     fn tokenizes_boolean_literals() {
         let actual = tokenize("True False not True").unwrap();
@@ -617,7 +618,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Check boolean boundaries and case sensitivity.
+    // Check that longer boolean-like names and lowercase true remain identifiers.
     #[test]
     fn recognizes_boolean_literal_boundaries() {
         let actual = tokenize("TrueValue False_alarm true").unwrap();
@@ -631,7 +632,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify multiplication in an expression.
+    // Check that an asterisk produces a multiplication token within an expression.
     #[test]
     fn tokenizes_multiplication() {
         let actual = tokenize("2*damage+3").unwrap();
@@ -647,7 +648,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify division, floor division, and modulo tokens.
+    // Check the tokens for division, floor division, and modulo.
     #[test]
     fn tokenizes_division_operators() {
         let actual = tokenize("7/2 7//2 7%2").unwrap();
@@ -667,7 +668,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify divmod call tokens.
+    // Check the tokens for a divmod call with two arguments.
     #[test]
     fn tokenizes_divmod_call_syntax() {
         let actual = tokenize("divmod(7,2)").unwrap();
@@ -684,7 +685,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify Unix line endings.
+    // Check that a Unix line ending separates statements with a newline token.
     #[test]
     fn tokenizes_newlines() {
         let actual = tokenize("x=10\ny=20").unwrap();
@@ -702,7 +703,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify Windows line endings.
+    // Check that a Windows line ending produces a single newline token.
     #[test]
     fn tokenizes_windows_newlines() {
         let actual = tokenize("x=10\r\ny=20").unwrap();
@@ -720,7 +721,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify leading space counts.
+    // Check the number of spaces at the start of a line, including empty input.
     #[test]
     fn counts_leading_spaces() {
         assert_eq!(count_leading_spaces("    x = 10"), 4);
@@ -729,7 +730,7 @@ mod tests {
         assert_eq!(count_leading_spaces(""), 0);
     }
 
-    // Verify increased and unchanged indentation.
+    // Check that only increased indentation adds a level and an Indent token.
     #[test]
     fn records_indentation_increase() {
         let mut levels: Vec<usize> = vec![0];
@@ -746,7 +747,7 @@ mod tests {
         assert_eq!(tokens, vec![Token::Indent]);
     }
 
-    // Verify decreased and unchanged indentation.
+    // Check that only decreased indentation removes levels and adds Dedent tokens.
     #[test]
     fn records_indentation_decrease() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
@@ -768,7 +769,7 @@ mod tests {
         assert_eq!(tokens, vec![Token::Dedent, Token::Dedent]);
     }
 
-    // Reject dedentation to an unknown level.
+    // Check that dedenting to an unknown level returns an error without changing state.
     #[test]
     fn rejects_inconsistent_indentation() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
@@ -781,7 +782,7 @@ mod tests {
         assert!(tokens.is_empty());
     }
 
-    // Verify valid indentation transitions.
+    // Check increased, unchanged, and decreased indentation levels and tokens.
     #[test]
     fn processes_indentation_transitions() {
         let mut levels: Vec<usize> = vec![0];
@@ -803,7 +804,7 @@ mod tests {
         assert_eq!(tokens, vec![Token::Indent, Token::Dedent]);
     }
 
-    // Reject invalid indentation transitions.
+    // Check that an invalid indentation change leaves levels and tokens unchanged.
     #[test]
     fn rejects_invalid_indentation_transition() {
         let mut levels: Vec<usize> = vec![0, 4, 8];
@@ -816,7 +817,7 @@ mod tests {
         assert!(tokens.is_empty());
     }
 
-    // Verify indentation across lines.
+    // Check newline, Indent, and Dedent tokens when entering and leaving a block.
     #[test]
     fn tokenizes_multiline_indentation() {
         let source = "if x:\n    y=1\nz=2";
@@ -842,7 +843,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Reject inconsistent indentation across lines.
+    // Check that inconsistent indentation across lines returns an error.
     #[test]
     fn rejects_invalid_multiline_indentation() {
         let source = "if x:\n    y=1\n  z=2";
@@ -852,7 +853,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Verify empty lines to be ignored
+    // Check that blank lines inside a block add no extra tokens.
     #[test]
     fn ignores_blank_lines_in_blocks() {
         let source = "if x:\n    y=1\n\n    z=2\nw=3";
@@ -882,7 +883,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify unwanted newline token before the first real statement
+    // Check that leading blank lines add no tokens before the first statement.
     #[test]
     fn ignores_leading_blank_lines() {
         let actual = tokenize("\n    \nx=10").unwrap();
@@ -896,7 +897,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify one close remaining block
+    // Check that a Dedent token closes an open block at the end of input.
     #[test]
     fn closes_indentation_at_eof() {
         let actual = tokenize("if x:\n    y=1").unwrap();
@@ -916,7 +917,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify multiple close nested blocks
+    // Check that Dedent tokens close all nested blocks at the end of input.
     #[test]
     fn closes_nested_indentation_at_eof() {
         let actual = tokenize("if x:\n    if y:\n        z=1").unwrap();
@@ -924,7 +925,7 @@ mod tests {
         assert!(actual.ends_with(&[Token::Dedent, Token::Dedent]));
     }
 
-    // Verify that inline comments are ignored
+    // Check that inline comments are ignored while statement newlines are preserved.
     #[test]
     fn ignores_inline_comments() {
         let actual = tokenize("x=1 # note\ny=2").unwrap();
@@ -942,7 +943,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Rejects comment-only lines
+    // Check that lines containing only comments do not affect the tokens.
     #[test]
     fn ignores_comment_only_lines() {
         let with_comment = tokenize("if x:\n    y=1\n    # note\n    z=2\nw=3").unwrap();
@@ -952,7 +953,7 @@ mod tests {
         assert_eq!(with_comment, without_comment);
     }
 
-    // Verify terminal newline behavior
+    // Check that a trailing newline does not change the tokens.
     #[test]
     fn handles_terminal_newline() {
         let without = tokenize("if x:\n    y=1").unwrap();
@@ -961,7 +962,7 @@ mod tests {
         assert_eq!(without, with);
     }
 
-    // Verify windows line endings behavior
+    // Check that Unix and Windows line endings produce identical tokens.
     #[test]
     fn normalizes_multiline_line_endings() {
         let unix = tokenize("x=1\ny=2\n").unwrap();
@@ -970,7 +971,7 @@ mod tests {
         assert_eq!(unix, windows);
     }
 
-    // Rejects tab indentation
+    // Check that tab indentation returns an error with the correct line number.
     #[test]
     fn rejects_tab_indentation() {
         let error = tokenize("if x:\n\ty=1").unwrap_err();
@@ -978,7 +979,7 @@ mod tests {
         assert_eq!(error, "Line 2: Tabs are not supported; use spaces");
     }
 
-    // Verify parenthesized expression
+    // Check that line breaks inside parentheses add no newline or indentation tokens.
     #[test]
     fn tokenizes_parenthesized_multiline_expression() {
         let actual = tokenize("total=(10+\n    20)").unwrap();
@@ -996,7 +997,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Verify both function are equal wrapped and single-line
+    // Check that wrapped and single-line function signatures produce identical tokens.
     #[test]
     fn tokenizes_multiline_function_signature() {
         let wrapped = tokenize("def add(\n    a:int,\n    b:int\n)->int:\n    return a+b").unwrap();
@@ -1006,7 +1007,7 @@ mod tests {
         assert_eq!(wrapped, single_line);
     }
 
-    // Rejects invalid parenthesis
+    // Check that unclosed and unmatched parentheses return errors.
     #[test]
     fn rejects_unbalanced_parentheses() {
         let unclosed = tokenize("total=(10+20");
@@ -1016,7 +1017,7 @@ mod tests {
         assert!(unmatched.is_err());
     }
 
-    // Verify tokenize() produces structural tokens
+    // Check that tokenize includes newline, Indent, and Dedent tokens for a block.
     #[test]
     fn public_tokenize_handles_indentation() {
         let actual = tokenize("if x:\n    y=1").unwrap();
@@ -1036,7 +1037,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Rejects unclose parenthesis and return an error
+    // Check that tokenize reports an unclosed parenthesis with its line number.
     #[test]
     fn public_tokenize_rejects_unclosed_parentheses() {
         let result = tokenize("x=(10+20");
@@ -1044,7 +1045,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), "Line 1: Unclosed parenthesis");
     }
 
-    // Verify a valid an error with line number
+    // Check the error line number after blank lines and comments.
     #[test]
     fn reports_invalid_character_line() {
         let error = tokenize("x=1\n\n# comment\ny=@").unwrap_err();
@@ -1052,7 +1053,7 @@ mod tests {
         assert_eq!(error, "Line 4: Unexpected character: @");
     }
 
-    // Verify inconsistent indentation on line 3
+    // Check that an indentation error reports the line number and space count.
     #[test]
     fn reports_inconsistent_indentation_line() {
         let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
@@ -1060,7 +1061,7 @@ mod tests {
         assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
     }
 
-    // Verify unmatch closing parenthesis at line 3
+    // Check that an unmatched closing parenthesis error reports its line number.
     #[test]
     fn reports_unmatched_closing_parenthesis_line() {
         let error = tokenize("x=1\ny=2\nz=3)").unwrap_err();
@@ -1068,7 +1069,7 @@ mod tests {
         assert_eq!(error, "Line 3: Unmatched closing parenthesis");
     }
 
-    // Verify unclosed nested parenthesis
+    // Check that an unclosed parenthesis error reports the opening line, including nesting.
     #[test]
     fn reports_unclosed_parenthesis_opening_line() {
         let error = tokenize("x=1\nresult=(2+3").unwrap_err();
@@ -1078,5 +1079,25 @@ mod tests {
         let nested_error = tokenize("x=(\n    y=(1+2)").unwrap_err();
 
         assert_eq!(nested_error, "Line 1: Unclosed parenthesis");
+    }
+
+    // Check that trailing comments and blank lines still allow the final block to close.
+    #[test]
+    fn handles_eof_after_trailing_comments() {
+        let with_comments = tokenize("if x:\n    y=1\n\n    # Last comment\n").unwrap();
+
+        let without_comments = tokenize("if x:\n    y=1").unwrap();
+
+        assert_eq!(with_comments, without_comments);
+
+        assert!(with_comments.ends_with(&[Token::Integer(1), Token::Dedent]));
+    }
+
+    // Check that input containing only comments and blank lines produces no tokens.
+    #[test]
+    fn handles_comments_only_source() {
+        let actual = tokenize("# First comment\n    # Second comment\n\n").unwrap();
+
+        assert!(actual.is_empty());
     }
 }
