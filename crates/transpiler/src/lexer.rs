@@ -37,7 +37,23 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 tokens.push(token);
             }
             '+' => tokens.push(Token::Plus),
-            '-' => tokens.push(Token::Minus),
+            '-' => {
+                // Check if -> can be collected as arrow else minus
+                if chars.peek() == Some(&'>') {
+                    chars.next();
+                    tokens.push(Token::Arrow);
+                } else {
+                    tokens.push(Token::Minus);
+                }
+            }
+            '=' => {
+                if chars.peek() == Some(&'=') {
+                    chars.next();
+                    tokens.push(Token::EqualEqual);
+                } else {
+                    tokens.push(Token::Equal);
+                }
+            }
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
             ':' => tokens.push(Token::Colon),
@@ -228,6 +244,58 @@ mod tests {
             Token::Colon,
             Token::Comma,
             Token::RightParen,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test arrows and minus token
+    #[test]
+    fn tokenizes_arrow_and_minus() {
+        let actual = tokenize("-> -").unwrap();
+
+        let expected = vec![Token::Arrow, Token::Minus];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test arrow in a function
+    #[test]
+    fn tokenizes_return_annotation() {
+        let actual = tokenize("add->int").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("add")),
+            Token::Arrow,
+            Token::Identifier(String::from("int")),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test the assignment equal(=) operator
+    #[test]
+    fn tokenizes_assignment() {
+        let actual = tokenize("health=100").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("health")),
+            Token::Equal,
+            Token::Integer(100),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test the equality(==)  operator
+    #[test]
+    fn tokenizes_equality() {
+        let actual = tokenize("health==100").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("health")),
+            Token::EqualEqual,
+            Token::Integer(100),
         ];
 
         assert_eq!(actual, expected);

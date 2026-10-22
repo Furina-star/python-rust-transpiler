@@ -3,6 +3,7 @@ pub enum Token {
     Integer(i32),
     Plus,
     Minus,
+    Arrow,
     Identifier(String),
     Def,
     Return,
@@ -10,4 +11,6 @@ pub enum Token {
     RightParen,
     Colon,
     Comma,
+    Equal,
+    EqualEqual,
 }
