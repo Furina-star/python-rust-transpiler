@@ -217,4 +217,19 @@ mod tests {
 
         assert_eq!(actual, expected);
     }
+
+    // Test Punctuations
+    #[test]
+    fn tokenizes_punctuation() {
+        let actual = tokenize("(:,)").unwrap();
+
+        let expected = vec![
+            Token::LeftParen,
+            Token::Colon,
+            Token::Comma,
+            Token::RightParen,
+        ];
+
+        assert_eq!(actual, expected);
+    }
 }
