@@ -76,11 +76,18 @@ fn record_indent_decrease(
 fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut levels: Vec<usize> = vec![0];
+    let mut saw_code_line = false;
 
-    for (index, line) in source.lines().enumerate() {
-        if index > 0 {
+    for line in source.lines() {
+        if line.trim_matches(' ').is_empty() {
+            continue
+        }
+
+        if saw_code_line {
             tokens.push(Token::Newline);
         }
+
+        saw_code_line = true;
 
         let spaces = count_leading_spaces(line);
         process_indentation(spaces, &mut levels, &mut tokens)?;
