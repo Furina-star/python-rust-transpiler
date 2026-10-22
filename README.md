@@ -8,18 +8,21 @@ This project aims to translate a restricted, statically typed Python-like langua
 
 The planned compiler pipeline combines lexical analysis, recursive-descent parsing, semantic validation, and Rust code generation.
 
+Phase 1: Lexical Analysis is complete for the initial language scope. The library provides a tested lexer with indentation handling and error locations. Syntax analysis is the next milestone.
+
 **Note:** The project does not aim to provide full Python compatibility.
 
 ## Planned Language Features
 
 - Integer arithmetic
+- Boolean values, comparisons, and logical expressions
 - Typed function declarations
 - Variables and assignments
 - Return statements
 - Conditional statements
 - While loops
 
-These language features are planned. Initial tokenization is implemented; parsing, semantic analysis, and Rust code generation are still pending.
+The lexer recognizes the tokens needed for these features. Parsing, semantic analysis, and Rust code generation are still pending, so source programs cannot yet be transpiled or executed.
 
 ## Planned Architecture
 
@@ -45,7 +48,8 @@ Generated Rust Source
 Cargo.toml                  Workspace manifest
 crates/transpiler/
     Cargo.toml              Library crate manifest
-    src/                    Token types, initial lexer, and placeholders for later stages
+    src/                    Token types, lexer, and placeholders for later stages
+        lexer/tests.rs      Lexer unit tests
     examples/               Standalone Rust examples
 docs/                       Project documentation
 ```
@@ -62,7 +66,7 @@ cargo test --workspace
 cargo fmt --all -- --check
 ```
 
-The test harness contains 13 lexer unit tests. Current limitations and verification results are listed in [Project State](docs/PROJECT_STATE.md).
+The test suite contains 65 lexer unit tests covering token recognition, indentation, line continuations, comments, and diagnostics. Current limitations and verification results are listed in [Project State](docs/PROJECT_STATE.md).
 
 ## Lexer API
 
@@ -78,9 +82,11 @@ assert_eq!(tokens, vec![
 ]);
 ```
 
-`tokenize(&str)` returns `Result<Vec<Token>, String>`. It groups ASCII digits into `i32` values and reads full identifiers before matching the exact keywords `def` and `return`; `defense` and `returnValue` remain identifiers. Identifiers start with an ASCII letter or `_`, followed by ASCII letters, digits, or `_`.
+`tokenize(&str)` returns `Result<Vec<Token>, String>`. It recognizes `i32` integer literals, booleans, ASCII identifiers, keywords, arithmetic and comparison operators, assignment, punctuation, and return type arrows. Keywords match complete identifiers; names such as `defense` and `returnValue` remain identifiers.
 
-Only ordinary spaces are skipped. Integer overflow and unsupported characters return errors. Parentheses, colons, and commas have token variants but are not recognized yet; tabs, newlines, and indentation are also unsupported. A minus sign is emitted as a separate token.
+The lexer emits `Newline`, `Indent`, and `Dedent` tokens for statement and block boundaries. It accepts Unix and Windows line endings, skips blank lines and comments, and supports line continuations inside parentheses. Open indentation levels close at the end of input.
+
+Invalid characters, integer overflow, tabs in code, and bare carriage returns produce errors with line and column numbers. Inconsistent indentation and unbalanced parentheses produce errors with line numbers. Tokens do not yet carry source spans. See [Supported Lexer Behavior](docs/PROJECT_STATE.md#supported-lexer-behavior) for the complete token set and limitations.
 
 ## Examples
 

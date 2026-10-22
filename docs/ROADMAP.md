@@ -1,8 +1,8 @@
 # Development Roadmap
 
-Implementation milestones for the Python-to-Rust transpiler. Lexical analysis is currently in progress; see [Project State](PROJECT_STATE.md) for supported behavior and verification results.
+Implementation milestones for the Python-to-Rust transpiler. Phase 1: Lexical Analysis is complete for the initial language scope. Syntax analysis is the next milestone; see [Project State](PROJECT_STATE.md) for supported behavior and verification results.
 
-Checked items record completed milestones, not a guarantee that every repository check passes. The compiler phases below describe implementation order; the intended runtime pipeline places semantic analysis before code generation.
+Checked items record completed milestones. The compiler phases below describe implementation order; the intended runtime pipeline places semantic analysis before code generation.
 
 ## Phase 0: Project Initialization
 
@@ -13,13 +13,16 @@ Checked items record completed milestones, not a guarantee that every repository
 
 ## Phase 1: Lexical Analysis
 
-- [x] Define initial token types
-- [x] Tokenize integers and addition/subtraction operators
-- [x] Recognize identifiers and `def`/`return` keywords
-- [x] Validate initial lexer behavior with unit tests
-- [ ] Recognize punctuation
-- [ ] Handle newlines and indentation
-- [ ] Extend tests for remaining lexer features
+- [x] Define token types for the initial language scope
+- [x] Tokenize integers, booleans, and ASCII identifiers
+- [x] Recognize function, control flow, and logical keywords
+- [x] Recognize arithmetic, assignment, and comparison operators
+- [x] Recognize punctuation and return type arrows
+- [x] Handle newlines, indentation, and dedentation
+- [x] Ignore blank lines and comments
+- [x] Support line continuations inside parentheses
+- [x] Report invalid input with line numbers and column numbers for scanning errors
+- [x] Validate lexer behavior with 65 unit tests
 
 ## Phase 2: Syntax Analysis
 

@@ -22,4 +22,30 @@ recursive-descent parser.
 Implement one component at a time.
 Each component must be tested before
 the next phase begins.
-    
+
+## Decision 006: Indentation and Line Continuations
+Represent statement and block boundaries with
+`Newline`, `Indent`, and `Dedent` tokens.
+Use spaces for indentation and require dedentation
+to match a previously recorded level.
+
+Ignore blank lines and comments. Suppress layout
+tokens within parentheses and close remaining
+indentation levels at the end of input.
+
+## Decision 007: Initial Lexical Scope
+Use ASCII identifiers and `i32` integer literals.
+Recognize booleans and keywords by exact,
+case-sensitive matches after reading a full identifier.
+
+Emit operators separately from their operands.
+Type names remain identifiers for later compiler
+stages to interpret and validate.
+
+## Decision 008: Lexer Diagnostics
+Keep the public lexer API as
+`Result<Vec<Token>, String>` and stop at the first error.
+
+Include line and column numbers for scanning errors
+and line numbers for indentation and parenthesis errors.
+Successful tokens do not yet include source spans.
