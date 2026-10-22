@@ -176,15 +176,10 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
             ',' => tokens.push(Token::Comma),
             '\n' => tokens.push(Token::Newline),
             '\r' => {
-                if matches!(chars.peek(), Some(&(_, '\n'))) {
-                    chars.next();
-                    tokens.push(Token::Newline);
-                } else {
-                    return Err(ScanError {
-                        column,
-                        message: String::from("Unexpected carriage return"),
-                    });
-                }
+                return Err(ScanError {
+                    column,
+                    message: String::from("Unexpected carriage return"),
+                });
             }
             c if is_identifier_start(c) => {
                 // Collect the full identifier.
@@ -1132,6 +1127,7 @@ mod tests {
         assert!(actual.is_empty());
     }
 
+    // Check that an invalid character error reports its line and column, including leading spaces.
     #[test]
     fn reports_invalid_character_column() {
         let error = tokenize("x=1\n  y=@").unwrap_err();
@@ -1139,6 +1135,7 @@ mod tests {
         assert_eq!(error, "Line 2, Column 5: Unexpected character: @");
     }
 
+    // Check that an integer overflow error reports the number's starting line and column.
     #[test]
     fn reports_integer_overflow_column() {
         let error = tokenize("x=1\n  y=2147483648").unwrap_err();
@@ -1146,6 +1143,7 @@ mod tests {
         assert!(error.starts_with("Line 2, Column 5:"));
     }
 
+    // Check the tokens for a complete function with typed parameters, a return type, and a body.
     #[test]
     fn tokenizes_complete_typed_function() {
         let source = "def add(a: int, b: int) -> int:\n    return a + b";
@@ -1177,5 +1175,13 @@ mod tests {
         ];
 
         assert_eq!(actual, expected);
+    }
+
+    // Check that a carriage return without a newline reports an error with its line and column.
+    #[test]
+    fn rejects_bare_carriage_return() {
+        let error = tokenize("x=1\ry=2").unwrap_err();
+
+        assert_eq!(error, "Line 1, Column 4: Unexpected carriage return");
     }
 }
