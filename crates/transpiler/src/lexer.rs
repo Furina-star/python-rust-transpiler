@@ -1,3 +1,6 @@
+//! Converts source code into tokens, handling indentation, comments, and line continuations.
+//! Reports invalid input with source locations.
+
 use crate::token::Token;
 
 // Check the first identifier character.

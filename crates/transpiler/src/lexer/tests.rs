@@ -1,3 +1,5 @@
+//! Unit tests for token recognition, indentation, line continuations, comments, and lexer errors.
+
 use super::*;
 
 // Check that plus and minus signs produce the correct tokens.

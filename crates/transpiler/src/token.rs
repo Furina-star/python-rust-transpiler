@@ -1,3 +1,5 @@
+//! Token types for literals, keywords, operators, punctuation, and indentation in the source language.
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
     // Literals and identifiers
