@@ -21,6 +21,10 @@ pub enum Token {
     // Arithmetic operators
     Plus,
     Minus,
+    Star,
+    Slash,
+    FloorDivide,
+    Percent,
 
     // Assignment operator
     Equal,

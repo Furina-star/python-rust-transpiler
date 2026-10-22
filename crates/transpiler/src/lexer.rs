@@ -46,6 +46,17 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     tokens.push(Token::Minus);
                 }
             }
+            '*' => tokens.push(Token::Star),
+            '/' => {
+                // Lookahead implementation for FloorDivide and Slash
+                if chars.peek() == Some(&'/') {
+                    chars.next();
+                    tokens.push(Token::FloorDivide);
+                } else {
+                    tokens.push(Token::Slash);
+                }
+            }
+            '%' => tokens.push(Token::Percent),
             '=' => {
                 // Check if it's an equality else assignment
                 if chars.peek() == Some(&'=') {
@@ -471,6 +482,59 @@ mod tests {
             Token::Identifier(String::from("TrueValue")),
             Token::Identifier(String::from("False_alarm")),
             Token::Identifier(String::from("true")),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test multiplication alongside an integer, identifier, and addition
+    #[test]
+    fn tokenizes_multiplication() {
+        let actual = tokenize("2*damage+3").unwrap();
+
+        let expected = vec![
+            Token::Integer(2),
+            Token::Star,
+            Token::Identifier(String::from("damage")),
+            Token::Plus,
+            Token::Integer(3),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test recognizing all three division operators
+    #[test]
+    fn tokenizes_division_operators() {
+        let actual = tokenize("7/2 7//2 7%2").unwrap();
+
+        let expected = vec![
+            Token::Integer(7),
+            Token::Slash,
+            Token::Integer(2),
+            Token::Integer(7),
+            Token::FloorDivide,
+            Token::Integer(2),
+            Token::Integer(7),
+            Token::Percent,
+            Token::Integer(2),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test a divmod() function from Python
+    #[test]
+    fn tokenizes_divmod_call_syntax() {
+        let actual = tokenize("divmod(7,2)").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("divmod")),
+            Token::LeftParen,
+            Token::Integer(7),
+            Token::Comma,
+            Token::Integer(2),
+            Token::RightParen,
         ];
 
         assert_eq!(actual, expected);
