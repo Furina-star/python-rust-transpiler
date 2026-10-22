@@ -1013,4 +1013,32 @@ mod tests {
         assert!(unclosed.is_err());
         assert!(unmatched.is_err());
     }
+
+    // Verify tokenize() produces structural tokens
+    #[test]
+    fn public_tokenize_handles_indentation() {
+        let actual = tokenize("if x:\n    y=1").unwrap();
+
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("x")),
+            Token::Colon,
+            Token::Newline,
+            Token::Indent,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(1),
+            Token::Dedent,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Rejects unclose parenthesis and return an error
+    #[test]
+    fn public_tokenize_rejects_unclosed_parentheses() {
+        let result = tokenize("x=(10+20");
+
+        assert_eq!(result.unwrap_err(), "Unclosed parenthesis");
+    }
 }
