@@ -79,6 +79,12 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
     let mut saw_code_line = false;
 
     for line in source.lines() {
+        let content = line.trim_start_matches(' ');
+
+        if content.is_empty() || content.starts_with('#') {
+            continue;
+        }
+
         if line.trim_matches(' ').is_empty() {
             continue;
         }
@@ -90,9 +96,8 @@ fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
         saw_code_line = true;
 
         let spaces = count_leading_spaces(line);
-        process_indentation(spaces, &mut levels, &mut tokens)?;
 
-        let content = line.trim_start_matches(' ');
+        process_indentation(spaces, &mut levels, &mut tokens)?;
         tokens.extend(tokenize(content)?);
     }
 
@@ -228,7 +233,17 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
 
                 tokens.push(token);
             }
-            ' ' => {}
+            '#' => {
+                // Ignore # preserve the new lines
+                while let Some(&next_ch) = chars.peek() {
+                    if next_ch == '\n' || next_ch == '\r' {
+                        break;
+                    } else {
+                        chars.next();
+                    }
+                }
+            },
+            ' ' => {},
             _ => return Err(format!("Unexpected character: {ch}")),
         }
     }
