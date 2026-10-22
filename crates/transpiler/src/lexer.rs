@@ -97,6 +97,15 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             ')' => tokens.push(Token::RightParen),
             ':' => tokens.push(Token::Colon),
             ',' => tokens.push(Token::Comma),
+            '\n' => tokens.push(Token::Newline),
+            '\r' => {
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                    tokens.push(Token::Newline);
+                } else {
+                    return Err(String::from("Unexpected carriage return"));
+                }
+            },
             c if is_identifier_start(c) => {
                 // Maximal munch where it detects a reserved keyword until the next character cannot belong to an identifier
                 let mut identifier = String::new();
