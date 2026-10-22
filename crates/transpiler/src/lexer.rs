@@ -259,7 +259,9 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
 
                 Token::RightParen => {
                     if paren_depth == 0 {
-                        return Err(String::from("Unmatched closing parenthesis"));
+                        return Err(String::from(format!(
+                            "Line {line_number}: Unmatched closing parenthesis"
+                        )));
                     } else {
                         paren_depth -= 1;
                     }
@@ -1060,5 +1062,13 @@ mod tests {
         let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
 
         assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
+    }
+
+    // Report unmatch closing parenthesis at line 3
+    #[test]
+    fn reports_unmatched_closing_parenthesis_line() {
+        let error = tokenize("x=1\ny=2\nz=3)").unwrap_err();
+
+        assert_eq!(error, "Line 3: Unmatched closing parenthesis");
     }
 }
