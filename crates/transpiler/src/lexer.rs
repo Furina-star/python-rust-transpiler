@@ -74,11 +74,12 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 }
             }
             '!' => {
+                // Check if it's Not Equal != else error
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     tokens.push(Token::NotEqual);
                 } else {
-                    return Err(format!("Unexpected character: {}", '!'));
+                    return Err(format!("Unexpected character: {ch}"));
                 }
             }
             '(' => tokens.push(Token::LeftParen),
@@ -103,6 +104,12 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 let token = match identifier.as_str() {
                     "def" => Token::Def,
                     "return" => Token::Return,
+                    "if" => Token::If,
+                    "else" => Token::Else,
+                    "while" => Token::While,
+                    "and" => Token::And,
+                    "or" => Token:: Or,
+                    "not" => Token:: Not,
                     _ => Token::Identifier(identifier),
                 };
 
@@ -382,5 +389,35 @@ mod tests {
         let error = tokenize("!").unwrap_err();
 
         assert_eq!(error, "Unexpected character: !");
+    }
+
+    // Test recognized control-flow keywords
+    #[test]
+    fn tokenizes_control_flow_keywords() {
+        let actual = tokenize("if health else while").unwrap();
+
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("health")),
+            Token::Else,
+            Token::While,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test Keyword-prefix mistakes
+    #[test]
+    fn recognizes_control_flow_keyword_boundaries() {
+        let actual = tokenize("if iffy elsewhere while_loop").unwrap();
+
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("iffy")),
+            Token::Identifier(String::from("elsewhere")),
+            Token::Identifier(String::from("while_loop")),
+        ];
+
+        assert_eq!(actual, expected);
     }
 }

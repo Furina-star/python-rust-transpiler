@@ -1,21 +1,40 @@
 #[derive(Debug, PartialEq)]
 pub enum Token {
+    // Literals and identifiers
     Integer(i32),
-    Plus,
-    Minus,
-    Arrow,
     Identifier(String),
+
+    // Keywords
     Def,
     Return,
+    If,
+    Else,
+    While,
+
+    // Delimiters and punctuation
     LeftParen,
     RightParen,
     Colon,
     Comma,
+    Arrow,
+
+    // Arithmetic operators
+    Plus,
+    Minus,
+
+    // Assignment operator
     Equal,
+
+    // Comparison operators
     EqualEqual,
+    NotEqual,
     Less,
     LessEqual,
     Greater,
     GreaterEqual,
-    NotEqual,
+
+    // Logical operators
+    And,
+    Or,
+    Not,
 }
