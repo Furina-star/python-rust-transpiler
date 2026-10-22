@@ -73,6 +73,14 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     tokens.push(Token::Greater);
                 }
             }
+            '!' => {
+                if chars.peek() == Some(&'=') {
+                    chars.next();
+                    tokens.push(Token::NotEqual);
+                } else {
+                    return Err(format!("Unexpected character: {}", '!'));
+                }
+            }
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
             ':' => tokens.push(Token::Colon),
@@ -306,7 +314,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    // Test the equality(==)  operator
+    // Test the equality(==) operator
     #[test]
     fn tokenizes_equality() {
         let actual = tokenize("health==100").unwrap();
@@ -318,5 +326,61 @@ mod tests {
         ];
 
         assert_eq!(actual, expected);
+    }
+
+    // Test Less and LessEqual operators
+    #[test]
+    fn tokenizes_less_comparisons() {
+        let actual = tokenize("a<10 b<=20").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("a")),
+            Token::Less,
+            Token::Integer(10),
+            Token::Identifier(String::from("b")),
+            Token::LessEqual,
+            Token::Integer(20),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test Greater and GreaterEqual operators
+    #[test]
+    fn tokenizes_greater_comparisons() {
+        let actual = tokenize("a>10 b>=20").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("a")),
+            Token::Greater,
+            Token::Integer(10),
+            Token::Identifier(String::from("b")),
+            Token::GreaterEqual,
+            Token::Integer(20),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test valid inequality (!=)
+    #[test]
+    fn tokenizes_inequality() {
+        let actual = tokenize("health!=100").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("health")),
+            Token::NotEqual,
+            Token::Integer(100),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test invalid standalone exclamation mark(!)
+    #[test]
+    fn rejects_standalone_exclamation() {
+        let error = tokenize("!").unwrap_err();
+
+        assert_eq!(error, "Unexpected character: !");
     }
 }
