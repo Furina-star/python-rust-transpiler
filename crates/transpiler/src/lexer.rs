@@ -805,4 +805,50 @@ mod tests {
 
         assert!(result.is_err());
     }
+
+    // Validate empty lines to be ignored
+    #[test]
+    fn ignores_blank_lines_in_blocks() {
+        let source = "if x:\n    y=1\n\n    z=2\nw=3";
+
+        let actual = tokenize_multiline(source).unwrap();
+
+        let expected = vec![
+            Token::If,
+            Token::Identifier(String::from("x")),
+            Token::Colon,
+            Token::Newline,
+            Token::Indent,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(1),
+            Token::Newline,
+            Token::Identifier(String::from("z")),
+            Token::Equal,
+            Token::Integer(2),
+            Token::Newline,
+            Token::Dedent,
+            Token::Identifier(String::from("w")),
+            Token::Equal,
+            Token::Integer(3),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Validates unwanted newline token before the first real statement
+    #[test]
+    fn ignores_leading_blank_lines() {
+        let actual = tokenize_multiline("\n    \nx=10").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("x")),
+            Token::Equal,
+            Token::Integer(10),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+
 }
