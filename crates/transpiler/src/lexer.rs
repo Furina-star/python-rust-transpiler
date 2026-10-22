@@ -72,67 +72,7 @@ fn record_indent_decrease(
     Ok(())
 }
 
-// Tokenize lines with newlines and indentation.
-fn tokenize_multiline(source: &str) -> Result<Vec<Token>, String> {
-    let mut tokens: Vec<Token> = Vec::new();
-    let mut levels: Vec<usize> = vec![0];
-    let mut saw_code_line = false;
-    let mut paren_depth: usize = 0;
-
-    for line in source.lines() {
-        let content = line.trim_start_matches(' ');
-
-        if content.is_empty() || content.starts_with('#') {
-            continue;
-        }
-
-        let continuation = paren_depth > 0;
-
-        if saw_code_line && !continuation {
-            tokens.push(Token::Newline);
-        }
-
-        saw_code_line = true;
-
-        if !continuation {
-            let spaces = count_leading_spaces(line);
-
-            process_indentation(spaces, &mut levels, &mut tokens)?;
-        }
-
-        let line_tokens = tokenize(content)?;
-
-        for token in &line_tokens {
-            match token {
-                Token::LeftParen => {
-                    paren_depth += 1;
-                }
-
-                Token::RightParen => {
-                    if paren_depth == 0 {
-                        return Err(String::from("Unmatched closing parenthesis"));
-                    } else {
-                        paren_depth -= 1;
-                    }
-                }
-
-                _ => {}
-            }
-        }
-
-        tokens.extend(line_tokens);
-    }
-
-    if paren_depth != 0 {
-        return Err(String::from("Unclosed parenthesis"));
-    }
-
-    record_indent_decrease(0, &mut levels, &mut tokens)?;
-
-    Ok(tokens)
-}
-
-pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
+fn tokenize_line(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().peekable();
 
@@ -274,6 +214,66 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             _ => return Err(format!("Unexpected character: {ch}")),
         }
     }
+    Ok(tokens)
+}
+
+// Tokenize lines with newlines and indentation.
+pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
+    let mut tokens: Vec<Token> = Vec::new();
+    let mut levels: Vec<usize> = vec![0];
+    let mut saw_code_line = false;
+    let mut paren_depth: usize = 0;
+
+    for line in source.lines() {
+        let content = line.trim_start_matches(' ');
+
+        if content.is_empty() || content.starts_with('#') {
+            continue;
+        }
+
+        let continuation = paren_depth > 0;
+
+        if saw_code_line && !continuation {
+            tokens.push(Token::Newline);
+        }
+
+        saw_code_line = true;
+
+        if !continuation {
+            let spaces = count_leading_spaces(line);
+
+            process_indentation(spaces, &mut levels, &mut tokens)?;
+        }
+
+        let line_tokens = tokenize_line(content)?;
+
+        for token in &line_tokens {
+            match token {
+                Token::LeftParen => {
+                    paren_depth += 1;
+                }
+
+                Token::RightParen => {
+                    if paren_depth == 0 {
+                        return Err(String::from("Unmatched closing parenthesis"));
+                    } else {
+                        paren_depth -= 1;
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        tokens.extend(line_tokens);
+    }
+
+    if paren_depth != 0 {
+        return Err(String::from("Unclosed parenthesis"));
+    }
+
+    record_indent_decrease(0, &mut levels, &mut tokens)?;
+
     Ok(tokens)
 }
 
@@ -819,7 +819,7 @@ mod tests {
     fn tokenizes_multiline_indentation() {
         let source = "if x:\n    y=1\nz=2";
 
-        let actual = tokenize_multiline(source).unwrap();
+        let actual = tokenize(source).unwrap();
 
         let expected = vec![
             Token::If,
@@ -845,7 +845,7 @@ mod tests {
     fn rejects_invalid_multiline_indentation() {
         let source = "if x:\n    y=1\n  z=2";
 
-        let result = tokenize_multiline(source);
+        let result = tokenize(source);
 
         assert!(result.is_err());
     }
@@ -855,7 +855,7 @@ mod tests {
     fn ignores_blank_lines_in_blocks() {
         let source = "if x:\n    y=1\n\n    z=2\nw=3";
 
-        let actual = tokenize_multiline(source).unwrap();
+        let actual = tokenize(source).unwrap();
 
         let expected = vec![
             Token::If,
@@ -883,7 +883,7 @@ mod tests {
     // Verify unwanted newline token before the first real statement
     #[test]
     fn ignores_leading_blank_lines() {
-        let actual = tokenize_multiline("\n    \nx=10").unwrap();
+        let actual = tokenize("\n    \nx=10").unwrap();
 
         let expected = vec![
             Token::Identifier(String::from("x")),
@@ -897,7 +897,7 @@ mod tests {
     // Verify one close remaining block
     #[test]
     fn closes_indentation_at_eof() {
-        let actual = tokenize_multiline("if x:\n    y=1").unwrap();
+        let actual = tokenize("if x:\n    y=1").unwrap();
 
         let expected = vec![
             Token::If,
@@ -917,7 +917,7 @@ mod tests {
     // Verify multiple close nested blocks
     #[test]
     fn closes_nested_indentation_at_eof() {
-        let actual = tokenize_multiline("if x:\n    if y:\n        z=1").unwrap();
+        let actual = tokenize("if x:\n    if y:\n        z=1").unwrap();
 
         assert!(actual.ends_with(&[Token::Dedent, Token::Dedent]));
     }
@@ -943,9 +943,9 @@ mod tests {
     // Rejects comment-only lines
     #[test]
     fn ignores_comment_only_lines() {
-        let with_comment = tokenize_multiline("if x:\n    y=1\n    # note\n    z=2\nw=3").unwrap();
+        let with_comment = tokenize("if x:\n    y=1\n    # note\n    z=2\nw=3").unwrap();
 
-        let without_comment = tokenize_multiline("if x:\n    y=1\n    z=2\nw=3").unwrap();
+        let without_comment = tokenize("if x:\n    y=1\n    z=2\nw=3").unwrap();
 
         assert_eq!(with_comment, without_comment);
     }
@@ -953,8 +953,8 @@ mod tests {
     // Verify terminal newline behavior
     #[test]
     fn handles_terminal_newline() {
-        let without = tokenize_multiline("if x:\n    y=1").unwrap();
-        let with = tokenize_multiline("if x:\n    y=1\n").unwrap();
+        let without = tokenize("if x:\n    y=1").unwrap();
+        let with = tokenize("if x:\n    y=1\n").unwrap();
 
         assert_eq!(without, with);
     }
@@ -962,8 +962,8 @@ mod tests {
     // Verify windows line endings behavior
     #[test]
     fn normalizes_multiline_line_endings() {
-        let unix = tokenize_multiline("x=1\ny=2\n").unwrap();
-        let windows = tokenize_multiline("x=1\r\ny=2\r\n").unwrap();
+        let unix = tokenize("x=1\ny=2\n").unwrap();
+        let windows = tokenize("x=1\r\ny=2\r\n").unwrap();
 
         assert_eq!(unix, windows);
     }
@@ -971,7 +971,7 @@ mod tests {
     // Rejects tab indentation
     #[test]
     fn rejects_tab_indentation() {
-        let error = tokenize_multiline("if x:\n\ty=1").unwrap_err();
+        let error = tokenize("if x:\n\ty=1").unwrap_err();
 
         assert_eq!(error, "Tabs are not supported; use spaces");
     }
@@ -979,7 +979,7 @@ mod tests {
     // Verify parenthesized expression
     #[test]
     fn tokenizes_parenthesized_multiline_expression() {
-        let actual = tokenize_multiline("total=(10+\n    20)").unwrap();
+        let actual = tokenize("total=(10+\n    20)").unwrap();
 
         let expected = vec![
             Token::Identifier(String::from("total")),
@@ -997,10 +997,9 @@ mod tests {
     // Verify both function are equal wrapped and single-line
     #[test]
     fn tokenizes_multiline_function_signature() {
-        let wrapped =
-            tokenize_multiline("def add(\n    a:int,\n    b:int\n)->int:\n    return a+b").unwrap();
+        let wrapped = tokenize("def add(\n    a:int,\n    b:int\n)->int:\n    return a+b").unwrap();
 
-        let single_line = tokenize_multiline("def add(a:int,b:int)->int:\n    return a+b").unwrap();
+        let single_line = tokenize("def add(a:int,b:int)->int:\n    return a+b").unwrap();
 
         assert_eq!(wrapped, single_line);
     }
@@ -1008,8 +1007,8 @@ mod tests {
     // Rejects invalid parenthesis
     #[test]
     fn rejects_unbalanced_parentheses() {
-        let unclosed = tokenize_multiline("total=(10+20");
-        let unmatched = tokenize_multiline("total=10)");
+        let unclosed = tokenize("total=(10+20");
+        let unmatched = tokenize("total=10)");
 
         assert!(unclosed.is_err());
         assert!(unmatched.is_err());
