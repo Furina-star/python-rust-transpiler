@@ -242,8 +242,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                         chars.next();
                     }
                 }
-            },
-            ' ' => {},
+            }
+            ' ' => {}
             _ => return Err(format!("Unexpected character: {ch}")),
         }
     }
@@ -893,5 +893,33 @@ mod tests {
         let actual = tokenize_multiline("if x:\n    if y:\n        z=1").unwrap();
 
         assert!(actual.ends_with(&[Token::Dedent, Token::Dedent]));
+    }
+
+    // Verify that inline comments are ignored
+    #[test]
+    fn ignores_inline_comments() {
+        let actual = tokenize("x=1 # note\ny=2").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("x")),
+            Token::Equal,
+            Token::Integer(1),
+            Token::Newline,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(2),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Rejects comment-only lines
+    #[test]
+    fn ignores_comment_only_lines() {
+        let with_comment = tokenize_multiline("if x:\n    y=1\n    # note\n    z=2\nw=3").unwrap();
+
+        let without_comment = tokenize_multiline("if x:\n    y=1\n    z=2\nw=3").unwrap();
+
+        assert_eq!(with_comment, without_comment);
     }
 }
