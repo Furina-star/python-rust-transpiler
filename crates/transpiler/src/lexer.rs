@@ -105,7 +105,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 } else {
                     return Err(String::from("Unexpected carriage return"));
                 }
-            },
+            }
             c if is_identifier_start(c) => {
                 // Maximal munch where it detects a reserved keyword until the next character cannot belong to an identifier
                 let mut identifier = String::new();
@@ -544,6 +544,42 @@ mod tests {
             Token::Comma,
             Token::Integer(2),
             Token::RightParen,
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test Unix-style line endings
+    #[test]
+    fn tokenizes_newlines() {
+        let actual = tokenize("x=10\ny=20").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("x")),
+            Token::Equal,
+            Token::Integer(10),
+            Token::Newline,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(20),
+        ];
+
+        assert_eq!(actual, expected);
+    }
+
+    // Test Windows-style line endings
+    #[test]
+    fn tokenizes_windows_newlines() {
+        let actual = tokenize("x=10\r\ny=20").unwrap();
+
+        let expected = vec![
+            Token::Identifier(String::from("x")),
+            Token::Equal,
+            Token::Integer(10),
+            Token::Newline,
+            Token::Identifier(String::from("y")),
+            Token::Equal,
+            Token::Integer(20),
         ];
 
         assert_eq!(actual, expected);
