@@ -80,7 +80,7 @@ cargo test --workspace
 cargo fmt --all -- --check
 ```
 
-The test suite contains 65 lexer unit tests covering token recognition, indentation, line continuations, comments, and diagnostics. Current limitations and verification results are listed in [Project State](docs/PROJECT_STATE.md).
+The test suite contains 65 lexer unit tests covering token recognition, indentation, line continuations, comments, and diagnostics, plus two integration tests for tokenization and error reporting through the public API. Current limitations and verification results are listed in [Project State](docs/PROJECT_STATE.md).
 
 ## Lexer API
 

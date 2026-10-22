@@ -215,15 +215,8 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
 
                 tokens.push(token);
             }
-            '#' => {
-                while let Some(&(_, next_ch)) = chars.peek() {
-                    if next_ch == '\n' || next_ch == '\r' {
-                        break;
-                    } else {
-                        chars.next();
-                    }
-                }
-            }
+            // Ignore the rest of this physical line after a comment marker.
+            '#' => break,
             '\t' => {
                 return Err(ScanError {
                     column,

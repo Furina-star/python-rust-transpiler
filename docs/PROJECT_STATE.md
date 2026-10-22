@@ -13,12 +13,13 @@ Phase 1: Lexical Analysis is complete for the initial language scope. The librar
 - Blank line and comment handling, with line continuations inside parentheses.
 - Error locations for invalid input, integer overflow, indentation, and unbalanced parentheses.
 - 65 lexer unit tests in `crates/transpiler/src/lexer/tests.rs`, including a complete typed function.
+- Two integration tests in `crates/transpiler/tests/lexer_integration.rs` covering public API tokenization and error reporting.
 
 ## Next Milestones
 
 - Define AST types for expressions, statements, and functions.
 - Implement recursive-descent expression parsing with operator precedence.
-- Implement statement and typed function parsing, including block boundaries.
+- Implement statement and typed function parsing, accepting `Newline`, `Dedent`, or end-of-input as appropriate statement boundaries.
 - Add parser tests for valid syntax and syntax errors.
 
 See the [roadmap](ROADMAP.md) for subsequent compiler phases.
@@ -51,7 +52,7 @@ The public API is `tokenize(source: &str) -> Result<Vec<Token>, String>`.
 - Integer digit sequences must fit in `i32`. A minus sign is a separate token, so `-2147483648` currently fails when its magnitude is scanned.
 - Tokens do not include source spans. Errors are strings, and structural errors currently report a line without a column.
 - Tokenization does not validate grammar, types, or scope. Type names and names such as `divmod` are identifiers, without built-in semantics.
-- Automated compiler coverage consists of lexer unit tests; integration and documentation tests are pending.
+- Automated compiler coverage consists of 65 lexer unit tests and two public API integration tests. Full end-to-end transpilation tests and documentation tests are pending.
 
 ## Verification
 
@@ -70,6 +71,7 @@ Verified on 2026-10-23 with `rustc 1.98.1` and `cargo 1.98.1`:
 | Formatting | Passed |
 | Workspace check, including all targets | Passed |
 | Unit tests | 65 passed |
+| Public API integration tests | 2 passed |
 | Documentation tests | None defined |
 | Standalone examples | All six ran successfully |
 

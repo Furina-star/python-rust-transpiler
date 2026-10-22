@@ -23,12 +23,14 @@ Checked items record completed milestones. The compiler phases below describe im
 - [x] Support line continuations inside parentheses
 - [x] Report invalid input with line numbers and column numbers for scanning errors
 - [x] Validate lexer behavior with 65 unit tests
+- [x] Verify public API tokenization and error reporting with two integration tests
 
 ## Phase 2: Syntax Analysis
 
 - [ ] Define the AST
 - [ ] Implement expression parsing
 - [ ] Implement statement parsing
+- [ ] Accept `Newline`, `Dedent`, and end-of-input as appropriate statement boundaries
 - [ ] Implement function parsing
 
 ## Phase 3: Code Generation
@@ -46,7 +48,7 @@ Checked items record completed milestones. The compiler phases below describe im
 ## Phase 5: CLI and Testing
 
 - [ ] Implement CLI
-- [ ] Add integration tests
+- [ ] Add full end-to-end transpilation integration tests
 - [ ] Improve error reporting
 
 ## Phase 6: Procedural Macros

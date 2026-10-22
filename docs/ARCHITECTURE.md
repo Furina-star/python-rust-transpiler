@@ -55,6 +55,8 @@ Build and test the standalone library before adding CLI and procedural macro int
 
 The next step is to define the AST and implement expression, statement, and function parsing over the existing token stream.
 
+The parser must accept `Newline`, `Dedent`, or end-of-input as appropriate statement boundaries. The lexer does not guarantee a final `Newline`: `x=1` ends after its integer token, and `if x:\n    y=1` ends with `Dedent` immediately after the final integer. Statement parsing must leave `Dedent` for block parsing to consume and detect end-of-input when the token stream is exhausted.
+
 ## Related Documentation
 
 - [Project State](PROJECT_STATE.md)
