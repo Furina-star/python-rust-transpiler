@@ -18,69 +18,37 @@
 
 ## Overview
 
-This project aims to translate a restricted, statically typed Python-like language into equivalent Rust source code.
+Python-to-Rust Transpiler aims to translate a restricted, statically typed Python-like language into Rust source code. Full Python compatibility is outside its scope.
 
-The planned compiler pipeline combines lexical analysis, recursive-descent parsing, semantic validation, and Rust code generation.
+Phases 0, 1, and 1.5 are complete. The library provides lexical analysis, positioned tokens, and structured diagnostics. **Phase 2: Syntax Analysis is next.** Parsing, type checking, and Rust code generation are not implemented, so programs cannot yet be transpiled or executed.
 
-Phase 1: Lexical Analysis is complete for the initial language scope. The library provides a tested lexer with indentation handling and error locations. Syntax analysis is the next milestone.
+## Supported Features
 
-**Note:** The project does not aim to provide full Python compatibility.
+- Integer and boolean literals, ASCII identifiers, keywords, operators, and punctuation.
+- Space-based indentation, comments, Unix and Windows line endings, and parenthesized line continuations.
+- `Newline`, `Indent`, `Dedent`, and `Eof` tokens, with source positions and error diagnostics.
 
-## Planned Language Features
+The intended language includes typed functions, variables, assignments, returns, conditionals, and while loops. The lexer recognizes their tokens; later phases will validate their syntax and meaning. See [Project State](docs/PROJECT_STATE.md) for limitations.
 
-- Integer arithmetic
-- Boolean values, comparisons, and logical expressions
-- Typed function declarations
-- Variables and assignments
-- Return statements
-- Conditional statements
-- While loops
-
-The lexer recognizes the tokens needed for these features. Parsing, semantic analysis, and Rust code generation are still pending, so source programs cannot yet be transpiled or executed.
-
-## Planned Architecture
+## Architecture
 
 ```text
-Source Code
-    ↓
-Lexer
-    ↓
-Parser
-    ↓
-Abstract Syntax Tree
-    ↓
-Semantic Analysis
-    ↓
-Rust Code Generator
-    ↓
-Generated Rust Source
+Source -> Lexer -> Parser -> AST -> Semantic Analysis -> Rust Code Generator -> Rust Source
 ```
+
+Only the lexer and its token and diagnostic types are implemented. See [Architecture](docs/ARCHITECTURE.md) for module responsibilities and API contracts.
 
 ## Repository Layout
 
-```text
-Cargo.toml                  Workspace manifest
-crates/transpiler/
-    Cargo.toml              Library crate manifest
-    src/                    Token types, lexer, and placeholders for later stages
-        lexer/tests.rs      Lexer unit tests
-    examples/               Standalone Rust examples
-docs/                       Project documentation
-```
-
-## Development
-
-Use a Rust toolchain that supports the 2024 edition, with Cargo and `rustfmt`. Run commands from the repository root.
-
-Check the project:
-
-```bash
-cargo check --workspace --all-targets
-cargo test --workspace
-cargo fmt --all -- --check
-```
-
-The test suite contains 65 lexer unit tests covering token recognition, indentation, line continuations, comments, and diagnostics, plus two integration tests for tokenization and error reporting through the public API. Current limitations and verification results are listed in [Project State](docs/PROJECT_STATE.md).
+| Path | Contents |
+| --- | --- |
+| `Cargo.toml` | Workspace with one library crate |
+| `crates/transpiler/src/` | Lexer, tokens, diagnostics, and placeholder compiler files |
+| `crates/transpiler/src/lexer/tests.rs` | Lexer unit tests |
+| `crates/transpiler/tests/` | Public API integration tests |
+| `crates/transpiler/examples/` | Six standalone Rust examples |
+| `cli/`, `python_macro/` | Placeholder directories; not workspace crates |
+| `docs/` | Status, roadmap, architecture, and decisions |
 
 ## Lexer API
 
@@ -93,31 +61,38 @@ assert_eq!(tokens, vec![
     Token::Identifier(String::from("total")),
     Token::Plus,
     Token::Integer(12),
+    Token::Newline,
+    Token::Eof,
 ]);
 ```
 
-`tokenize(&str)` returns `Result<Vec<Token>, String>`. It recognizes `i32` integer literals, booleans, ASCII identifiers, keywords, arithmetic and comparison operators, assignment, punctuation, and return type arrows. Keywords match complete identifiers; names such as `defense` and `returnValue` remain identifiers.
+Choose `tokenize` for token values, `tokenize_with_positions` for located tokens and string errors, or `tokenize_with_diagnostics` for located tokens and structured errors. All accept `&str`; their exact return types are listed in [Lexer APIs](docs/ARCHITECTURE.md#lexer-apis).
 
-The lexer emits `Newline`, `Indent`, and `Dedent` tokens for statement and block boundaries. It accepts Unix and Windows line endings, skips blank lines and comments, and supports line continuations inside parentheses. Open indentation levels close at the end of input.
+## Development
 
-Invalid characters, integer overflow, tabs in code, and bare carriage returns produce errors with line and column numbers. Inconsistent indentation and unbalanced parentheses produce errors with line numbers. Tokens do not yet carry source spans. See [Supported Lexer Behavior](docs/PROJECT_STATE.md#supported-lexer-behavior) for the complete token set and limitations.
+Use a current stable Rust toolchain with Cargo, `rustfmt`, and Clippy. The crate uses the 2024 edition. Run the same checks as CI from the repository root:
 
-## Examples
+```bash
+cargo fmt --all -- --check
+cargo check --workspace --all-targets
+cargo clippy --workspace --lib --tests -- -D warnings
+cargo test --workspace
+```
 
-Standalone Rust examples are available in [`crates/transpiler/examples/`](crates/transpiler/examples/). Run one with:
+See [Verification](docs/PROJECT_STATE.md#verification) for current results.
+
+The [standalone examples](crates/transpiler/examples/) demonstrate Rust features independently of the lexer. Run one with:
 
 ```bash
 cargo run -p python-rust-transpiler --example rust_basics
 ```
 
-These examples demonstrate Rust language features independently of the compiler API. For source tokenization, use the lexer example above.
-
 ## Documentation
 
-- [Development Roadmap](docs/ROADMAP.md)
-- [Project State](docs/PROJECT_STATE.md)
-- [Planned Architecture](docs/ARCHITECTURE.md)
-- [Technical Decisions](docs/DECISIONS.md)
+- [Project State](docs/PROJECT_STATE.md): current functionality, limitations, and verification.
+- [Development Roadmap](docs/ROADMAP.md): completed and planned phases.
+- [Architecture](docs/ARCHITECTURE.md): modules, APIs, and token behavior.
+- [Technical Decisions](docs/DECISIONS.md): design choices and deferred scope.
 
 ## References & Acknowledgments
 

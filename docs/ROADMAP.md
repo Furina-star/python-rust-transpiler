@@ -1,58 +1,60 @@
 # Development Roadmap
 
-Implementation milestones for the Python-to-Rust transpiler. Phase 1: Lexical Analysis is complete for the initial language scope. Syntax analysis is the next milestone; see [Project State](PROJECT_STATE.md) for supported behavior and verification results.
+Phases 0, 1, and 1.5 are complete for the initial language scope. **Phase 2: Syntax Analysis is next.** Checked items represent implemented milestones; verification lives in [Project State](PROJECT_STATE.md).
 
-Checked items record completed milestones. The compiler phases below describe implementation order; the intended runtime pipeline places semantic analysis before code generation.
+## Phase 0: Project Initialization — Complete
 
-## Phase 0: Project Initialization
+- [x] Configure the Cargo workspace and Git repository.
+- [x] Create initial documentation and verify the workspace builds.
 
-- [x] Configure Cargo workspace
-- [x] Configure Git
-- [x] Create initial documentation
-- [x] Verify workspace builds
+## Phase 1: Lexical Analysis — Complete
 
-## Phase 1: Lexical Analysis
+- [x] Define tokens for integers, booleans, ASCII identifiers, and keywords.
+- [x] Recognize arithmetic, assignment, comparison, punctuation, and arrow tokens.
+- [x] Handle indentation, dedentation, comments, and blank lines.
+- [x] Support Unix/Windows line endings and parenthesized continuations.
+- [x] Detect invalid characters, integer literals, indentation, and parentheses.
+- [x] Add lexer unit tests and public API integration tests.
 
-- [x] Define token types for the initial language scope
-- [x] Tokenize integers, booleans, and ASCII identifiers
-- [x] Recognize function, control flow, and logical keywords
-- [x] Recognize arithmetic, assignment, and comparison operators
-- [x] Recognize punctuation and return type arrows
-- [x] Handle newlines, indentation, and dedentation
-- [x] Ignore blank lines and comments
-- [x] Support line continuations inside parentheses
-- [x] Report invalid input with line numbers and column numbers for scanning errors
-- [x] Validate lexer behavior with 65 unit tests
-- [x] Verify public API tokenization and error reporting with two integration tests
+## Phase 1.5: Lexer Preparation for Parsing — Complete
 
-## Phase 2: Syntax Analysis
+- [x] Add `SourcePosition` and `LocatedToken`.
+- [x] Add structured `Diagnostic` errors with line and column information.
+- [x] Expose positioned and diagnostic APIs alongside the original `tokenize` signature.
+- [x] Emit a final `Newline` for code, close remaining blocks, and always emit `Eof`.
+- [x] Test token positions, diagnostics, and end-of-input behavior.
 
-- [ ] Define the AST
-- [ ] Implement expression parsing
-- [ ] Implement statement parsing
-- [ ] Accept `Newline`, `Dedent`, and end-of-input as appropriate statement boundaries
-- [ ] Implement function parsing
+## Phase 2: Syntax Analysis — Next
 
-## Phase 3: Code Generation
+- [ ] Define AST types for expressions, statements, and typed functions.
+- [ ] Implement recursive-descent expression parsing with precedence.
+- [ ] Parse assignments, returns, conditionals, loops, and function bodies.
+- [ ] Consume `Newline`, `Indent`, `Dedent`, and `Eof` according to the grammar.
+- [ ] Reject unexpected indentation and report syntax errors with source positions.
+- [ ] Add parser tests for valid and invalid syntax.
 
-- [ ] Generate Rust expressions
-- [ ] Generate Rust functions
-- [ ] Compile and test generated code
+## Phase 3: Semantic Analysis
 
-## Phase 4: Semantic Analysis
+- [ ] Add symbol tables and validate declarations, names, types, and scopes.
+- [ ] Integrate validation before code generation in the compilation pipeline.
 
-- [ ] Implement symbol tables
-- [ ] Support variable declarations
-- [ ] Validate types and scope
+## Phase 4: Code Generation
 
-## Phase 5: CLI and Testing
+- [ ] Generate Rust expressions, statements, and functions from the AST.
+- [ ] Compile and test generated code for the supported subset.
 
-- [ ] Implement CLI
-- [ ] Add full end-to-end transpilation integration tests
-- [ ] Improve error reporting
+Phase numbers retain the development order; the intended runtime pipeline validates semantics before generating Rust.
+
+## Phase 5: CLI and End-to-End Testing
+
+- [ ] Add a CLI for source input and generated Rust output.
+- [ ] Add end-to-end transpilation tests and user-facing diagnostics.
 
 ## Phase 6: Procedural Macros
 
-- [ ] Create macro crate
-- [ ] Integrate the transpiler
-- [ ] Test macro expansion
+- [ ] Create a macro crate after the library API stabilizes.
+- [ ] Integrate the transpiler and test macro expansion.
+
+Wider integers and compound assignment remain deferred; see [Technical Decisions](DECISIONS.md).
+
+[Project overview](../README.md) · [Architecture](ARCHITECTURE.md)

@@ -1,82 +1,70 @@
 # Project State
 
-## Implementation Status
+## Current Status
 
-Phase 1: Lexical Analysis is complete for the initial language scope. The library exposes `lexer::tokenize` and `token::Token`. Parsing, AST definitions, semantic analysis, and code generation remain placeholders; a complete transpilation API and CLI are not yet available.
+Phases 0, 1, and 1.5 are complete for the initial language scope. The library exports `lexer`, `token`, and `diagnostic`. **Phase 2: Syntax Analysis is next.** AST, parser, semantic analysis, and code generation files are empty placeholders and are not exported modules. There is no transpilation API, executable CLI, or macro crate yet.
 
-## Completed
+## Completed Functionality
 
-- Cargo workspace and library structure.
-- Compiler token types and public lexer API for the initial language scope.
-- Integer, boolean, identifier, keyword, operator, and punctuation tokenization.
-- Newline, indentation, and dedentation handling, including block closure at the end of input.
-- Blank line and comment handling, with line continuations inside parentheses.
-- Error locations for invalid input, integer overflow, indentation, and unbalanced parentheses.
-- 65 lexer unit tests in `crates/transpiler/src/lexer/tests.rs`, including a complete typed function.
-- Two integration tests in `crates/transpiler/tests/lexer_integration.rs` covering public API tokenization and error reporting.
-
-## Next Milestones
-
-- Define AST types for expressions, statements, and functions.
-- Implement recursive-descent expression parsing with operator precedence.
-- Implement statement and typed function parsing, accepting `Newline`, `Dedent`, or end-of-input as appropriate statement boundaries.
-- Add parser tests for valid syntax and syntax errors.
-
-See the [roadmap](ROADMAP.md) for subsequent compiler phases.
+- Token recognition for the initial language subset.
+- Indentation and dedentation, comments, blank lines, and parenthesized continuations.
+- Positioned tokens and structured diagnostics, with string-error convenience APIs.
+- Final `Newline`, block-closing `Dedent` tokens, and an explicit `Eof`.
+- Unit tests for lexer behavior, token positions, and diagnostics, plus public API integration tests.
 
 ## Supported Lexer Behavior
 
-The public API is `tokenize(source: &str) -> Result<Vec<Token>, String>`.
-
-| Feature | Behavior |
+| Feature | Current behavior |
 | --- | --- |
-| Integers | Groups ASCII digits into `i32` values |
-| Booleans | Recognizes the case-sensitive literals `True` and `False` |
-| Arithmetic operators | Recognizes `+`, `-`, `*`, `/`, `//`, and `%`; signs remain separate from integer tokens |
-| Assignment and comparisons | Recognizes `=`, `==`, `!=`, `<`, `<=`, `>`, and `>=` |
-| Identifiers | Accepts ASCII letters or `_` initially, followed by ASCII letters, digits, or `_` |
-| Keywords | Matches `def`, `return`, `if`, `else`, `while`, `and`, `or`, and `not` as complete, case-sensitive identifiers |
-| Punctuation | Recognizes parentheses, colons, commas, and the return type arrow `->` |
-| Spaces and empty input | Skips ordinary spaces; accepts empty input |
-| Newlines | Accepts Unix and Windows line endings; emits `Newline` between code lines outside parentheses, with no extra token for a trailing line ending |
-| Indentation | Uses leading spaces to emit `Indent` and `Dedent`; dedentation must match an existing level, and remaining blocks close at the end of input |
-| Comments and blank lines | Ignores inline comments, comment-only lines, and blank lines |
-| Line continuations | Suppresses newline and indentation tokens inside open parentheses |
-| Scanning errors | Reports the first unsupported character, integer overflow, tab in code, or bare carriage return with a one-based line and character column |
-| Structural errors | Reports inconsistent indentation or unmatched closing parentheses on the offending line, and unclosed parentheses on the opening line |
+| Integers | ASCII decimal digits parsed as `i32`; leading zeros accepted; signs are separate tokens |
+| Identifiers | `[A-Za-z_][A-Za-z0-9_]*` |
+| Booleans | Case-sensitive `True` and `False` |
+| Keywords | Exact matches for `def`, `return`, `if`, `else`, `while`, `and`, `or`, `not` |
+| Arithmetic | `+`, `-`, `*`, `/`, `//`, `%` |
+| Assignment and comparisons | `=`, `==`, `!=`, `<`, `<=`, `>`, `>=` |
+| Punctuation | `(`, `)`, `:`, `,`, `->` |
+| Layout | Space-based `Indent`/`Dedent`; `Newline` between logical code lines and after the final statement |
+| End of input | Remaining blocks close before `Eof`; input without code produces only `Eof` |
+| Comments and continuations | Skip blank lines and `#` comments; suppress layout inside open parentheses |
+| Line endings | Unix LF and Windows CRLF are accepted |
+| Errors | Return a diagnostic with line and column for the first detected error; wrappers format it as a string |
 
-## Limitations
+Exact API types and layout token positions are documented in [Architecture](ARCHITECTURE.md).
 
-- The language subset excludes strings, floating-point literals, Unicode identifiers, and additional Python syntax.
-- Tabs in code and explicit backslash line continuations are unsupported; indentation uses spaces.
-- Integer digit sequences must fit in `i32`. A minus sign is a separate token, so `-2147483648` currently fails when its magnitude is scanned.
-- Tokens do not include source spans. Errors are strings, and structural errors currently report a line without a column.
-- Tokenization does not validate grammar, types, or scope. Type names and names such as `divmod` are identifiers, without built-in semantics.
-- Automated compiler coverage consists of 65 lexer unit tests and two public API integration tests. Full end-to-end transpilation tests and documentation tests are pending.
+## Known Limitations
+
+- No parsing, grammar validation, type checking, execution, or Rust generation.
+- Strings, floats, Unicode identifiers, and explicit backslash continuations are unsupported. Tabs and bare carriage returns in scanned code are rejected.
+- Integer digit sequences must fit in `0..=2147483647`. Because signs are separate, `-2147483648` fails when its magnitude is scanned. Wider integer support is deferred.
+- Letters or underscores immediately after digits are invalid integer literals. Numeric separators and non-decimal prefixes are unsupported.
+- Compound assignment has no dedicated tokens or semantics: `+=` currently scans as `Plus`, `Equal`. It is deferred.
+- Indentation increases are accepted lexically, even where no block is expected. Rejecting unexpected indentation is a planned parser responsibility.
+- Positions record starts, not full spans or byte offsets. Error recovery and multiple diagnostics per call are not implemented.
+- Type names such as `int` and names such as `divmod` remain ordinary identifiers without built-in semantics.
+
+## Immediate Next Tasks
+
+1. Define the AST and parser entry point over positioned tokens.
+2. Parse expressions with precedence, then statements, blocks, and typed functions.
+3. Add syntax diagnostics and tests, including unexpected indentation and explicit `Eof` handling.
+
+See the [roadmap](ROADMAP.md) for later phases.
 
 ## Verification
 
-Run from the repository root:
+Verified locally on 2026-10-23 with `rustc 1.98.1` and `cargo 1.98.1`:
 
-```bash
-cargo fmt --all -- --check
-cargo check --workspace --all-targets
-cargo test --workspace
-```
-
-Verified on 2026-10-23 with `rustc 1.98.1` and `cargo 1.98.1`:
-
-| Check | Result |
+| Command | Result |
 | --- | --- |
-| Formatting | Passed |
-| Workspace check, including all targets | Passed |
-| Unit tests | 65 passed |
-| Public API integration tests | 2 passed |
-| Documentation tests | None defined |
-| Standalone examples | All six ran successfully |
+| `cargo fmt --all -- --check` | Passed |
+| `cargo check --workspace --all-targets` | Passed, including compilation of the six standalone examples |
+| `cargo clippy --workspace --lib --tests -- -D warnings` | Passed |
+| `cargo test --workspace` | 82 unit tests and 2 integration tests passed; 0 failed |
 
-Toolchain commands emitted a local path canonicalization warning; verification completed successfully.
+The 82 unit tests comprise 80 lexer tests, one token test, and one diagnostic test. Cargo reports zero documentation tests. End-to-end transpilation tests await the remaining compiler stages. Examples were compiled, not run, during this verification.
 
-## Documentation Maintenance
+The Rust snippets in the README and Architecture were also compiled and run separately with `rustdoc --test`; both passed. They are not included in Cargo's test count.
 
-Update supported behavior, limitations, and verification results when the implementation changes. Keep the [roadmap](ROADMAP.md) aligned with completed milestones and record architecture or scope changes in [Technical Decisions](DECISIONS.md).
+The local toolchain emitted a path canonicalization warning for `C:\Users\bello`; all checks completed successfully.
+
+[Project overview](../README.md) · [Architecture](ARCHITECTURE.md) · [Technical Decisions](DECISIONS.md)
