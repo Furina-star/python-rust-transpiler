@@ -1,7 +1,7 @@
 //! Converts source code into tokens, handling indentation, comments, and line continuations.
 //! Reports invalid input with source locations.
 
-use crate::token::Token;
+use crate::token::{LocatedToken, SourcePosition, Token};
 
 // Check the first identifier character.
 fn is_identifier_start(ch: char) -> bool {
@@ -83,7 +83,7 @@ struct ScanError {
 }
 
 // Convert a single line into tokens, ignoring spaces and comments.
-fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
+fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<LocatedToken>, ScanError> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().enumerate().peekable();
 
@@ -91,7 +91,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
     while let Some((index, ch)) = chars.next() {
         let column = index + 1;
 
-        match ch {
+        let token = match ch {
             '0'..='9' => {
                 // Collect consecutive ASCII digits.
                 let mut digits = String::new();
@@ -119,62 +119,55 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
                     column,
                     message: e.to_string(),
                 })?;
-                let token = Token::Integer(value);
-                tokens.push(token);
+                Token::Integer(value)
             }
-            '+' => tokens.push(Token::Plus),
+            '+' => Token::Plus,
             '-' => {
-                // Distinguish arrow from minus.
                 if matches!(chars.peek(), Some(&(_, '>'))) {
                     chars.next();
-                    tokens.push(Token::Arrow);
+                    Token::Arrow
                 } else {
-                    tokens.push(Token::Minus);
+                    Token::Minus
                 }
             }
-            '*' => tokens.push(Token::Star),
+            '*' => Token::Star,
             '/' => {
-                // Distinguish floor division from division.
                 if matches!(chars.peek(), Some(&(_, '/'))) {
                     chars.next();
-                    tokens.push(Token::FloorDivide);
+                    Token::FloorDivide
                 } else {
-                    tokens.push(Token::Slash);
+                    Token::Slash
                 }
             }
-            '%' => tokens.push(Token::Percent),
+            '%' => Token::Percent,
             '=' => {
-                // Distinguish equality from assignment.
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
-                    tokens.push(Token::EqualEqual);
+                    Token::EqualEqual
                 } else {
-                    tokens.push(Token::Equal);
+                    Token::Equal
                 }
             }
             '<' => {
-                // Distinguish <= from <.
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
-                    tokens.push(Token::LessEqual);
+                    Token::LessEqual
                 } else {
-                    tokens.push(Token::Less);
+                    Token::Less
                 }
             }
             '>' => {
-                // Distinguish >= from >.
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
-                    tokens.push(Token::GreaterEqual);
+                    Token::GreaterEqual
                 } else {
-                    tokens.push(Token::Greater);
+                    Token::Greater
                 }
             }
             '!' => {
-                // Accept != and reject a standalone !.
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
-                    tokens.push(Token::NotEqual);
+                    Token::NotEqual
                 } else {
                     return Err(ScanError {
                         column,
@@ -182,10 +175,10 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
                     });
                 }
             }
-            '(' => tokens.push(Token::LeftParen),
-            ')' => tokens.push(Token::RightParen),
-            ':' => tokens.push(Token::Colon),
-            ',' => tokens.push(Token::Comma),
+            '(' => Token::LeftParen,
+            ')' => Token::RightParen,
+            ':' => Token::Colon,
+            ',' => Token::Comma,
             '\r' => {
                 return Err(ScanError {
                     column,
@@ -221,7 +214,7 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
                     _ => Token::Identifier(identifier),
                 };
 
-                tokens.push(token);
+                token
             }
             // Ignore the rest of this physical line after a comment marker.
             '#' => break,
@@ -231,16 +224,30 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
                     message: String::from("Tabs are not supported; use spaces"),
                 });
             }
-            ' ' => {}
+            ' ' => continue,
             _ => {
                 return Err(ScanError {
                     column,
                     message: format!("Unexpected character: {ch}"),
                 });
             }
-        }
+        };
+
+        tokens.push(LocatedToken {
+            token,
+            position: SourcePosition {
+                line: line_number,
+                column,
+            },
+        });
     }
     Ok(tokens)
+}
+
+fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
+    let located = tokenize_line_located(source, 1)?;
+
+    Ok(located.into_iter().map(|item| item.token).collect())
 }
 
 // Convert source code into tokens, handling newlines, indentation, and line continuations.

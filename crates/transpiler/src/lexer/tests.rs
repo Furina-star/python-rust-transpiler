@@ -918,3 +918,28 @@ fn clones_identifier_token() {
 
     assert_eq!(original, cloned);
 }
+
+#[test]
+fn tracks_token_positions_in_line() {
+    let actual = tokenize_line_located("health = 100", 2).unwrap();
+
+    let expected = vec![
+        LocatedToken {
+            token: Token::Identifier("health".to_string()),
+            position: SourcePosition { line: 2, column: 1 },
+        },
+        LocatedToken {
+            token: Token::Equal,
+            position: SourcePosition { line: 2, column: 8 },
+        },
+        LocatedToken {
+            token: Token::Integer(100),
+            position: SourcePosition {
+                line: 2,
+                column: 10,
+            },
+        },
+    ];
+
+    assert_eq!(actual, expected);
+}
