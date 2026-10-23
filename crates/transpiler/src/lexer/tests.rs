@@ -92,25 +92,23 @@ fn rejects_invalid_character_after_valid_tokens() {
     assert_eq!(error, "Line 1, Column 5: Unexpected character: @");
 }
 
-// Check that identifiers can start with a letter or underscore, but not a digit.
+// Check that ASCII letters and underscores can start identifiers, but digits and operators cannot.
 #[test]
 fn recognizes_identifier_start_characters() {
     assert!(is_identifier_start('h'));
     assert!(is_identifier_start('Z'));
     assert!(is_identifier_start('_'));
-
     assert!(!is_identifier_start('7'));
     assert!(!is_identifier_start('+'));
 }
 
-// Check that letters, digits, and underscores can continue an identifier.
+// Check that ASCII letters, digits, and underscores can continue an identifier.
 #[test]
 fn recognizes_identifier_continuation_characters() {
     assert!(is_identifier_continue('a'));
     assert!(is_identifier_continue('Z'));
     assert!(is_identifier_continue('7'));
     assert!(is_identifier_continue('_'));
-
     assert!(!is_identifier_continue('+'));
     assert!(!is_identifier_continue(' '));
 }
@@ -480,7 +478,7 @@ fn tokenizes_newlines() {
     assert_eq!(actual, expected);
 }
 
-// Check that a Windows line ending produces a single newline token.
+// Check that a Windows line ending produces one newline token between statements.
 #[test]
 fn tokenizes_windows_newlines() {
     let actual = tokenize("x=10\r\ny=20").unwrap();
@@ -513,7 +511,6 @@ fn counts_leading_spaces() {
 #[test]
 fn tokenizes_multiline_indentation() {
     let source = "if x:\n    y=1\nz=2";
-
     let actual = tokenize(source).unwrap();
 
     let expected = vec![
@@ -541,7 +538,6 @@ fn tokenizes_multiline_indentation() {
 #[test]
 fn rejects_invalid_multiline_indentation() {
     let source = "if x:\n    y=1\n  z=2";
-
     let result = tokenize(source);
 
     assert!(result.is_err());
@@ -551,7 +547,6 @@ fn rejects_invalid_multiline_indentation() {
 #[test]
 fn ignores_blank_lines_in_blocks() {
     let source = "if x:\n    y=1\n\n    z=2\nw=3";
-
     let actual = tokenize(source).unwrap();
 
     let expected = vec![
@@ -649,7 +644,6 @@ fn ignores_inline_comments() {
 #[test]
 fn ignores_comment_only_lines() {
     let with_comment = tokenize("if x:\n    y=1\n    # note\n    z=2\nw=3").unwrap();
-
     let without_comment = tokenize("if x:\n    y=1\n    z=2\nw=3").unwrap();
 
     assert_eq!(with_comment, without_comment);
@@ -673,7 +667,7 @@ fn normalizes_multiline_line_endings() {
     assert_eq!(unix, windows);
 }
 
-// Check that tab indentation returns an error with the correct line number.
+// Check that tab indentation returns an error with the correct line and column.
 #[test]
 fn rejects_tab_indentation() {
     let error = tokenize("if x:\n\ty=1").unwrap_err();
@@ -708,7 +702,6 @@ fn tokenizes_parenthesized_multiline_expression() {
 #[test]
 fn tokenizes_multiline_function_signature() {
     let wrapped = tokenize("def add(\n    a:int,\n    b:int\n)->int:\n    return a+b").unwrap();
-
     let single_line = tokenize("def add(a:int,b:int)->int:\n    return a+b").unwrap();
 
     assert_eq!(wrapped, single_line);
@@ -746,7 +739,7 @@ fn public_tokenize_handles_indentation() {
     assert_eq!(actual, expected);
 }
 
-// Check that tokenize reports an unclosed parenthesis with its line number.
+// Check that tokenize reports an unclosed parenthesis at its opening line and column.
 #[test]
 fn public_tokenize_rejects_unclosed_parentheses() {
     let result = tokenize("x=(10+20");
@@ -757,7 +750,7 @@ fn public_tokenize_rejects_unclosed_parentheses() {
     );
 }
 
-// Check the error line number after blank lines and comments.
+// Check the error line and column after blank lines and comments.
 #[test]
 fn reports_invalid_character_line() {
     let error = tokenize("x=1\n\n# comment\ny=@").unwrap_err();
@@ -765,7 +758,7 @@ fn reports_invalid_character_line() {
     assert_eq!(error, "Line 4, Column 3: Unexpected character: @");
 }
 
-// Check that an indentation error reports the line number and space count.
+// Check that an indentation error reports the line, column, and space count.
 #[test]
 fn reports_inconsistent_indentation_line() {
     let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
@@ -776,7 +769,7 @@ fn reports_inconsistent_indentation_line() {
     );
 }
 
-// Check that an unmatched closing parenthesis error reports its line number.
+// Check that an unmatched closing parenthesis error reports its line and column.
 #[test]
 fn reports_unmatched_closing_parenthesis_line() {
     let error = tokenize("x=1\ny=2\nz=3)").unwrap_err();
@@ -784,7 +777,7 @@ fn reports_unmatched_closing_parenthesis_line() {
     assert_eq!(error, "Line 3, Column 4: Unmatched closing parenthesis");
 }
 
-// Check that an unclosed parenthesis error reports the opening line, including nesting.
+// Check that an unclosed parenthesis error reports its opening position, including nesting.
 #[test]
 fn reports_unclosed_parenthesis_opening_line() {
     let error = tokenize("x=1\nresult=(2+3").unwrap_err();
@@ -800,11 +793,9 @@ fn reports_unclosed_parenthesis_opening_line() {
 #[test]
 fn handles_eof_after_trailing_comments() {
     let with_comments = tokenize("if x:\n    y=1\n\n    # Last comment\n").unwrap();
-
     let without_comments = tokenize("if x:\n    y=1").unwrap();
 
     assert_eq!(with_comments, without_comments);
-
     assert!(with_comments.ends_with(&[
         Token::Integer(1),
         Token::Newline,
@@ -954,16 +945,12 @@ fn public_tokenize_with_positions_single_line() {
     let actual = tokenize_with_positions("x = 42").unwrap();
 
     assert_eq!(actual.len(), 5);
-
     assert_eq!(actual[0].token, Token::Identifier("x".to_string()));
     assert_eq!(actual[0].position, SourcePosition { line: 1, column: 1 });
-
     assert_eq!(actual[1].token, Token::Equal);
     assert_eq!(actual[1].position, SourcePosition { line: 1, column: 3 });
-
     assert_eq!(actual[2].token, Token::Integer(42));
     assert_eq!(actual[2].position, SourcePosition { line: 1, column: 5 });
-
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[3].position, SourcePosition { line: 1, column: 7 });
     assert_eq!(actual[4].token, Token::Eof);
@@ -996,10 +983,8 @@ fn tracks_newline_position() {
     let actual = tokenize_with_positions("x=1\ny=2").unwrap();
 
     assert_eq!(actual.len(), 9);
-
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[3].position, SourcePosition { line: 1, column: 4 });
-
     assert_eq!(actual[4].position, SourcePosition { line: 2, column: 1 });
 }
 
@@ -1009,12 +994,9 @@ fn tracks_indent_position() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
 
     assert_eq!(actual.len(), 11);
-
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[4].token, Token::Indent);
-
     assert_eq!(actual[4].position, SourcePosition { line: 2, column: 5 });
-
     assert_eq!(actual[5].position, SourcePosition { line: 2, column: 5 });
 }
 
@@ -1032,7 +1014,7 @@ fn tracks_dedent_position() {
     assert_eq!(dedent.position, SourcePosition { line: 3, column: 1 });
 }
 
-// Check that tokenize_with_positions reports an invalid dedent with its line number and space count.
+// Check that tokenize_with_positions reports an invalid dedent with its line, column, and space count.
 #[test]
 fn rejects_invalid_dedent_with_positions() {
     let source = "if x:\n    y=1\n  z=2";
@@ -1083,10 +1065,10 @@ fn closes_nested_positioned_blocks_at_eof() {
     }
 }
 
+// Check that tokenize joins a parenthesized expression without adding layout tokens inside it.
 #[test]
 fn positioned_tokenizer_handles_line_continuation() {
     let source = "total=(10+\n    20)";
-
     let actual = tokenize(source).unwrap();
 
     let expected = vec![
@@ -1104,10 +1086,10 @@ fn positioned_tokenizer_handles_line_continuation() {
     assert_eq!(actual, expected);
 }
 
+// Check that a statement without a trailing line break still ends with Newline and EOF tokens.
 #[test]
 fn emits_final_newline_and_eof() {
     let actual = tokenize("x=1").unwrap();
-
     let expected = vec![
         Token::Identifier("x".to_string()),
         Token::Equal,
@@ -1119,6 +1101,7 @@ fn emits_final_newline_and_eof() {
     assert_eq!(actual, expected);
 }
 
+// Check that the final Newline appears before the block's Dedent and EOF tokens.
 #[test]
 fn emits_newline_before_dedent_and_eof() {
     let actual = tokenize("if x:\n    y=1").unwrap();
@@ -1126,6 +1109,7 @@ fn emits_newline_before_dedent_and_eof() {
     assert!(actual.ends_with(&[Token::Integer(1), Token::Newline, Token::Dedent, Token::Eof,]));
 }
 
+// Check that empty input, spaces, and comment-only lines produce only EOF.
 #[test]
 fn emits_eof_for_empty_and_comment_only_input() {
     let inputs = [
@@ -1142,10 +1126,10 @@ fn emits_eof_for_empty_and_comment_only_input() {
     }
 }
 
+// Check that nested blocks end with a Newline, one Dedent per block, and EOF.
 #[test]
 fn finishes_nested_blocks_with_newline_and_eof() {
     let source = "if x:\n    if y:\n        z=1";
-
     let actual = tokenize(source).unwrap();
 
     assert!(actual.ends_with(&[
@@ -1157,27 +1141,25 @@ fn finishes_nested_blocks_with_newline_and_eof() {
     ]));
 }
 
+// Check that converting a scan error preserves its position, message, and formatted output.
 #[test]
 fn converts_scan_error_to_diagnostic() {
     let error = tokenize_line_located("x=@", 3).unwrap_err();
-
     let diagnostic = error.into_diagnostic(3);
 
     assert_eq!(diagnostic.position, SourcePosition { line: 3, column: 3 });
-
     assert_eq!(diagnostic.message, "Unexpected character: @");
-
     assert_eq!(
         diagnostic.to_string(),
         "Line 3, Column 3: Unexpected character: @"
     );
 }
 
+// Check that an unmatched closing parenthesis returns a diagnostic with its position and message.
 #[test]
 fn returns_structured_diagnostic_for_unmatched_parenthesis() {
     let error = tokenize_with_diagnostics("x=1)").unwrap_err();
 
     assert_eq!(error.position, SourcePosition { line: 1, column: 4 });
-
     assert_eq!(error.message, "Unmatched closing parenthesis");
 }

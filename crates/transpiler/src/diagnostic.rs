@@ -1,3 +1,5 @@
+//! Diagnostics with source positions and formatted error messages.
+
 use crate::token::SourcePosition;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -9,6 +11,7 @@ pub struct Diagnostic {
 use std::fmt;
 
 impl fmt::Display for Diagnostic {
+    // Format the diagnostic as a line, column, and error message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -22,6 +25,7 @@ impl fmt::Display for Diagnostic {
 mod tests {
     use super::*;
 
+    // Check that a diagnostic displays its line, column, and message.
     #[test]
     fn formats_diagnostic_with_source_position() {
         let diagnostic = Diagnostic {

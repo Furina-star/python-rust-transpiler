@@ -36,6 +36,7 @@ struct ScanError {
     message: String,
 }
 
+// Convert line-scanning errors into diagnostics with full source positions.
 impl ScanError {
     fn into_diagnostic(self, line_number: usize) -> Diagnostic {
         Diagnostic {
@@ -58,6 +59,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
         let column = index + 1;
 
         let token = match ch {
+            // Read an integer literal and reject invalid suffixes or overflow.
             '0'..='9' => {
                 // Collect consecutive ASCII digits.
                 let mut digits = String::new();
@@ -72,7 +74,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     }
                 }
 
-                // Check for invalid integer literals
+                // Reject letters or underscores immediately after digits.
                 if matches!(chars.peek(), Some(&(_, next_ch)) if is_identifier_start(next_ch)) {
                     return Err(ScanError {
                         column,
@@ -87,7 +89,9 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                 })?;
                 Token::Integer(value)
             }
+            // Recognize addition.
             '+' => Token::Plus,
+            // Distinguish a return type arrow from subtraction.
             '-' => {
                 if matches!(chars.peek(), Some(&(_, '>'))) {
                     chars.next();
@@ -96,7 +100,9 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     Token::Minus
                 }
             }
+            // Recognize multiplication.
             '*' => Token::Star,
+            // Distinguish floor division from division.
             '/' => {
                 if matches!(chars.peek(), Some(&(_, '/'))) {
                     chars.next();
@@ -105,7 +111,9 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     Token::Slash
                 }
             }
+            // Recognize modulo.
             '%' => Token::Percent,
+            // Distinguish equality from assignment.
             '=' => {
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
@@ -114,6 +122,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     Token::Equal
                 }
             }
+            // Recognize less-than comparisons, with optional equality.
             '<' => {
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
@@ -122,6 +131,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     Token::Less
                 }
             }
+            // Recognize greater-than comparisons, with optional equality.
             '>' => {
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
@@ -130,6 +140,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     Token::Greater
                 }
             }
+            // Recognize inequality and reject a standalone exclamation mark.
             '!' => {
                 if matches!(chars.peek(), Some(&(_, '='))) {
                     chars.next();
@@ -141,16 +152,22 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     });
                 }
             }
+            // Recognize an opening parenthesis.
             '(' => Token::LeftParen,
+            // Recognize a closing parenthesis.
             ')' => Token::RightParen,
+            // Recognize a colon.
             ':' => Token::Colon,
+            // Recognize a comma.
             ',' => Token::Comma,
+            // Reject a carriage return that remains inside a line.
             '\r' => {
                 return Err(ScanError {
                     column,
                     message: String::from("Unexpected carriage return"),
                 });
             }
+            // Read a name and classify it as a keyword, boolean, or identifier.
             c if is_identifier_start(c) => {
                 // Collect the full identifier.
                 let mut identifier = String::new();
@@ -182,13 +199,16 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
             }
             // Ignore the rest of this physical line after a comment marker.
             '#' => break,
+            // Reject tabs in code.
             '\t' => {
                 return Err(ScanError {
                     column,
                     message: String::from("Tabs are not supported; use spaces"),
                 });
             }
+            // Skip spaces between tokens.
             ' ' => continue,
+            // Reject unsupported characters.
             _ => {
                 return Err(ScanError {
                     column,
@@ -208,7 +228,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
     Ok(tokens)
 }
 
-// Convert source code line by line into tokens with line numbers and starting columns.
+// Convert source code into positioned tokens, returning structured diagnostics for invalid input.
 pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diagnostic> {
     let mut tokens = Vec::new();
     let mut previous_code_line: Option<(usize, usize)> = None;
@@ -219,6 +239,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         let line_number = index + 1;
         let content = line.trim_start_matches(' ');
 
+        // Ignore blank and comment-only lines without changing indentation.
         if content.is_empty() || content.starts_with('#') {
             continue;
         }
@@ -254,6 +275,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
                     },
                 });
             } else if spaces < *levels.last().unwrap() {
+                // A dedent must return to an existing indentation level.
                 if !levels.contains(&spaces) {
                     let diagnostic = Diagnostic {
                         position: SourcePosition {
@@ -266,6 +288,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
                     return Err(diagnostic);
                 }
 
+                // Emit one Dedent for each block being closed.
                 while *levels.last().unwrap() > spaces {
                     levels.pop().unwrap();
 
@@ -304,6 +327,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         previous_code_line = Some((line_number, line.chars().count()));
     }
 
+    // Report an unclosed parenthesis at its opening position.
     if let Some(&opening_position) = opening_lines.last() {
         let diagnostic = Diagnostic {
             position: opening_position,
@@ -313,7 +337,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         return Err(diagnostic);
     }
 
-    // Close remaining blocks at the end of the last code line.
+    // Place final tokens after the last code line, or at the start of empty input.
     let end_position = previous_code_line
         .map(|(line, length)| SourcePosition {
             line,
@@ -321,6 +345,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         })
         .unwrap_or(SourcePosition { line: 1, column: 1 });
 
+    // End the last statement before closing any remaining blocks.
     if previous_code_line.is_some() {
         tokens.push(LocatedToken {
             token: Token::Newline,
@@ -328,6 +353,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         });
     }
 
+    // Close all remaining indented blocks.
     while levels.len() > 1 {
         levels.pop();
 
@@ -337,6 +363,7 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
         });
     }
 
+    // Always terminate the token stream with EOF.
     tokens.push(LocatedToken {
         token: Token::Eof,
         position: end_position,
@@ -345,11 +372,12 @@ pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diag
     Ok(tokens)
 }
 
-// Convert source code into tokens, handling newlines, indentation, and line continuations.
+// Return positioned tokens and format diagnostics as error strings.
 pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
     tokenize_with_diagnostics(source).map_err(|diagnostic| diagnostic.to_string())
 }
 
+// Return token values without source positions, preserving formatted error messages.
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     tokenize_with_positions(source)
         .map(|located| located.into_iter().map(|item| item.token).collect())
