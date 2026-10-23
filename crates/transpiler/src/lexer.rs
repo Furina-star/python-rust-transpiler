@@ -1,6 +1,7 @@
 //! Converts source code into tokens, handling indentation, comments, and line continuations.
 //! Reports invalid input with source locations.
 
+use crate::diagnostic::Diagnostic;
 use crate::token::{LocatedToken, SourcePosition, Token};
 
 // Check the first identifier character.
@@ -33,6 +34,18 @@ fn count_leading_spaces(line: &str) -> usize {
 struct ScanError {
     column: usize,
     message: String,
+}
+
+impl ScanError {
+    fn into_diagnostic(self, line_number: usize) -> Diagnostic {
+        Diagnostic {
+            position: SourcePosition {
+                line: line_number,
+                column: self.column,
+            },
+            message: self.message,
+        }
+    }
 }
 
 // Convert a single line into tokens with source positions, ignoring spaces and comments.
@@ -212,12 +225,8 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
 
         // Treat lines inside open parentheses as continuations.
         let continuation = !opening_lines.is_empty();
-        let line_tokens = tokenize_line_located(line, line_number).map_err(|error| {
-            format!(
-                "Line {line_number}, Column {}: {}",
-                error.column, error.message
-            )
-        })?;
+        let line_tokens = tokenize_line_located(line, line_number)
+            .map_err(|error| error.into_diagnostic(line_number).to_string())?;
 
         // Separate code lines with a newline token unless the expression continues.
         if !continuation && let Some((previous_line, previous_length)) = previous_code_line {

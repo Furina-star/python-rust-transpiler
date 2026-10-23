@@ -1147,3 +1147,19 @@ fn finishes_nested_blocks_with_newline_and_eof() {
         Token::Eof,
     ]));
 }
+
+#[test]
+fn converts_scan_error_to_diagnostic() {
+    let error = tokenize_line_located("x=@", 3).unwrap_err();
+
+    let diagnostic = error.into_diagnostic(3);
+
+    assert_eq!(diagnostic.position, SourcePosition { line: 3, column: 3 });
+
+    assert_eq!(diagnostic.message, "Unexpected character: @");
+
+    assert_eq!(
+        diagnostic.to_string(),
+        "Line 3, Column 3: Unexpected character: @"
+    );
+}
