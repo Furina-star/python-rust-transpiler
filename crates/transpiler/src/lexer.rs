@@ -106,6 +106,14 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
                     }
                 }
 
+                // Check for invalid integer literals
+                if matches!(chars.peek(), Some(&(_, next_ch)) if is_identifier_start(next_ch)) {
+                    return Err(ScanError {
+                        column,
+                        message: String::from("Invalid integer literal"),
+                    });
+                }
+
                 // Parse digits and emit an integer token.
                 let value = digits.parse::<i32>().map_err(|e| ScanError {
                     column,

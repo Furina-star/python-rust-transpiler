@@ -880,3 +880,33 @@ fn rejects_bare_carriage_return() {
 
     assert_eq!(error, "Line 1, Column 4: Unexpected carriage return");
 }
+
+// Check that an integer immediately followed by a letter returns an invalid integer literal error.
+#[test]
+fn rejects_integer_followed_by_identifier() {
+    let error = tokenize("1abc").unwrap_err();
+
+    assert_eq!(error, "Line 1, Column 1: Invalid integer literal");
+}
+
+// Check that an integer immediately followed by an underscore returns an invalid integer literal error.
+#[test]
+fn rejects_integer_followed_by_underscore() {
+    let error = tokenize("123_abc").unwrap_err();
+
+    assert_eq!(error, "Line 1, Column 1: Invalid integer literal");
+}
+
+// Check that an integer and an identifier separated by spaces and a plus sign produce the correct tokens.
+#[test]
+fn accepts_integer_separated_from_identifier() {
+    let actual = tokenize("5 + abc").unwrap();
+
+    let expected = vec![
+        Token::Integer(5),
+        Token::Plus,
+        Token::Identifier(String::from("abc")),
+    ];
+
+    assert_eq!(actual, expected);
+}
