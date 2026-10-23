@@ -1034,6 +1034,7 @@ fn rejects_invalid_dedent_with_positions() {
     assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
 }
 
+// Check that a Dedent token closes an open block with the correct position at the end of input.
 #[test]
 fn closes_positioned_block_at_eof() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
@@ -1047,6 +1048,7 @@ fn closes_positioned_block_at_eof() {
     );
 }
 
+// Check that Dedent tokens close all nested blocks with the correct position at the end of input.
 #[test]
 fn closes_nested_positioned_blocks_at_eof() {
     let source = "if x:\n    if y:\n        z=1";
@@ -1068,4 +1070,19 @@ fn closes_nested_positioned_blocks_at_eof() {
             }
         );
     }
+}
+
+#[test]
+fn positioned_tokenizer_handles_line_continuation() {
+    let source = "total=(10+\n    20)";
+
+    let expected = tokenize(source).unwrap();
+
+    let actual: Vec<Token> = tokenize_with_positions(source)
+        .unwrap()
+        .into_iter()
+        .map(|item| item.token)
+        .collect();
+
+    assert_eq!(actual, expected);
 }

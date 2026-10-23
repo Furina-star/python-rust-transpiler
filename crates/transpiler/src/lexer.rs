@@ -254,6 +254,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
     let mut tokens = Vec::new();
     let mut previous_code_line: Option<(usize, usize)> = None;
     let mut levels: Vec<usize> = vec![0];
+    let mut opening_lines: Vec<usize> = Vec::new();
 
     for (index, line) in source.lines().enumerate() {
         let line_number = index + 1;
@@ -263,6 +264,8 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
             continue;
         }
 
+        // Treat lines inside open parentheses as continuations.
+        let continuation = !opening_lines.is_empty();
         let line_tokens = tokenize_line_located(line, line_number).map_err(|error| {
             format!(
                 "Line {line_number}, Column {}: {}",
@@ -270,7 +273,8 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
             )
         })?;
 
-        if let Some((previous_line, previous_length)) = previous_code_line {
+        // Separate code lines with a newline token unless the expression continues.
+        if !continuation && let Some((previous_line, previous_length))  = previous_code_line {
             tokens.push(LocatedToken {
                 token: Token::Newline,
                 position: SourcePosition {
@@ -282,33 +286,55 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
 
         let spaces = count_leading_spaces(line);
 
-        if spaces > *levels.last().unwrap() {
-            levels.push(spaces);
-
-            tokens.push(LocatedToken {
-                token: Token::Indent,
-                position: SourcePosition {
-                    line: line_number,
-                    column: spaces + 1,
-                },
-            });
-        } else if spaces < *levels.last().unwrap() {
-            if !levels.contains(&spaces) {
-                return Err(format!(
-                    "Line {line_number}: Inconsistent indentation: {spaces} spaces"
-                ));
-            }
-
-            while *levels.last().unwrap() > spaces {
-                levels.pop().unwrap();
+        // Apply indentation changes only outside parentheses.
+        if !continuation {
+            if spaces > *levels.last().unwrap() {
+                levels.push(spaces);
 
                 tokens.push(LocatedToken {
-                    token: Token::Dedent,
+                    token: Token::Indent,
                     position: SourcePosition {
                         line: line_number,
                         column: spaces + 1,
                     },
                 });
+            } else if spaces < *levels.last().unwrap() {
+                if !levels.contains(&spaces) {
+                    return Err(format!(
+                        "Line {line_number}: Inconsistent indentation: {spaces} spaces"
+                    ));
+                }
+
+                while *levels.last().unwrap() > spaces {
+                    levels.pop().unwrap();
+
+                    tokens.push(LocatedToken {
+                        token: Token::Dedent,
+                        position: SourcePosition {
+                            line: line_number,
+                            column: spaces + 1,
+                        },
+                    });
+                }
+            }
+        }
+
+        // Track open parentheses and reject unmatched closing parentheses.
+        for item in &line_tokens {
+            match &item.token {
+                Token::LeftParen => {
+                    opening_lines.push(line_number);
+                }
+
+                Token::RightParen => {
+                    if opening_lines.pop().is_none() {
+                        return Err(format!(
+                            "Line {line_number}: Unmatched closing parenthesis"
+                        ));
+                    }
+                }
+
+                _ => {}
             }
         }
 
@@ -316,6 +342,13 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         previous_code_line = Some((line_number, line.chars().count()));
     }
 
+    if let Some(&opening_line) = opening_lines.last() {
+        return Err(format!(
+            "Line {opening_line}: Unclosed parenthesis"
+        ));
+    }
+
+    // Close remaining blocks at the end of the last code line.
     if let Some((last_line, last_length)) = previous_code_line {
         while levels.len() > 1 {
             levels.pop();
