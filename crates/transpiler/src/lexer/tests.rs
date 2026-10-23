@@ -910,3 +910,11 @@ fn accepts_integer_separated_from_identifier() {
 
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn clones_identifier_token() {
+    let original = Token::Identifier(String::from("health"));
+    let cloned = original.clone();
+
+    assert_eq!(original, cloned);
+}
