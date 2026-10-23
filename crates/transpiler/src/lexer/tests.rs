@@ -1116,3 +1116,34 @@ fn emits_newline_before_dedent_and_eof() {
 
     assert!(actual.ends_with(&[Token::Integer(1), Token::Newline, Token::Dedent, Token::Eof,]));
 }
+
+#[test]
+fn emits_eof_for_empty_and_comment_only_input() {
+    let inputs = [
+        "",
+        "    ",
+        "# Just a comment",
+        "\n# First comment\n# Second comment\n",
+    ];
+
+    for source in inputs {
+        let actual = tokenize(source).unwrap();
+
+        assert_eq!(actual, vec![Token::Eof]);
+    }
+}
+
+#[test]
+fn finishes_nested_blocks_with_newline_and_eof() {
+    let source = "if x:\n    if y:\n        z=1";
+
+    let actual = tokenize(source).unwrap();
+
+    assert!(actual.ends_with(&[
+        Token::Integer(1),
+        Token::Newline,
+        Token::Dedent,
+        Token::Dedent,
+        Token::Eof,
+    ]));
+}

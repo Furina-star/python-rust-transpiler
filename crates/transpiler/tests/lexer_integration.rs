@@ -12,6 +12,8 @@ fn tokenizes_using_public_api() {
         Token::Identifier(String::from("health")),
         Token::Plus,
         Token::Integer(10),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
