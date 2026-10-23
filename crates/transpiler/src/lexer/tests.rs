@@ -911,6 +911,7 @@ fn accepts_integer_separated_from_identifier() {
     assert_eq!(actual, expected);
 }
 
+// Check that cloning an identifier token preserves its value.
 #[test]
 fn clones_identifier_token() {
     let original = Token::Identifier(String::from("health"));
@@ -945,6 +946,7 @@ fn tracks_token_positions_in_line() {
     assert_eq!(actual, expected);
 }
 
+// Check that tokenize_with_positions returns the correct tokens and positions for a single line.
 #[test]
 fn public_tokenize_with_positions_single_line() {
     let actual = tokenize_with_positions("x = 42").unwrap();
@@ -961,6 +963,7 @@ fn public_tokenize_with_positions_single_line() {
     assert_eq!(actual[2].position, SourcePosition { line: 1, column: 5 });
 }
 
+// Check that tokens on subsequent lines retain the correct line numbers and starting columns.
 #[test]
 fn tracks_positions_across_lines() {
     let actual = tokenize_with_positions("x = 10\ny = 20").unwrap();
@@ -978,4 +981,30 @@ fn tracks_positions_across_lines() {
         .unwrap();
 
     assert_eq!(twenty.position, SourcePosition { line: 2, column: 5 });
+}
+
+#[test]
+fn tracks_newline_position() {
+    let actual = tokenize_with_positions("x=1\ny=2").unwrap();
+
+    assert_eq!(actual.len(), 7);
+
+    assert_eq!(actual[3].token, Token::Newline);
+    assert_eq!(actual[3].position, SourcePosition { line: 1, column: 4 });
+
+    assert_eq!(actual[4].position, SourcePosition { line: 2, column: 1 });
+}
+
+#[test]
+fn tracks_indent_position() {
+    let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
+
+    assert_eq!(actual.len(), 8);
+
+    assert_eq!(actual[3].token, Token::Newline);
+    assert_eq!(actual[4].token, Token::Indent);
+
+    assert_eq!(actual[4].position, SourcePosition { line: 2, column: 5 });
+
+    assert_eq!(actual[5].position, SourcePosition { line: 2, column: 5 });
 }

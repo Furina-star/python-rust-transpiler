@@ -249,11 +249,19 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
     Ok(located.into_iter().map(|item| item.token).collect())
 }
 
+// Convert source code line by line into tokens with line numbers and starting columns.
 pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
     let mut tokens = Vec::new();
+    let mut previous_code_line: Option<(usize, usize)> = None;
+    let mut levels: Vec<usize> = vec![0];
 
     for (index, line) in source.lines().enumerate() {
         let line_number = index + 1;
+        let content = line.trim_start_matches(' ');
+
+        if content.is_empty() || content.starts_with('#') {
+            continue;
+        }
 
         let line_tokens = tokenize_line_located(line, line_number).map_err(|error| {
             format!(
@@ -262,7 +270,32 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
             )
         })?;
 
+        if let Some((previous_line, previous_length)) = previous_code_line {
+            tokens.push(LocatedToken {
+                token: Token::Newline,
+                position: SourcePosition {
+                    line: previous_line,
+                    column: previous_length + 1,
+                },
+            });
+        }
+
+        let spaces = count_leading_spaces(line);
+
+        if spaces > *levels.last().unwrap() {
+            levels.push(spaces);
+
+            tokens.push(LocatedToken {
+                token: Token::Indent,
+                position: SourcePosition {
+                    line: line_number,
+                    column: spaces + 1,
+                },
+            });
+        }
+
         tokens.extend(line_tokens);
+        previous_code_line = Some((line_number, line.chars().count()));
     }
 
     Ok(tokens)
