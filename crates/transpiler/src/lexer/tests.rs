@@ -1172,3 +1172,12 @@ fn converts_scan_error_to_diagnostic() {
         "Line 3, Column 3: Unexpected character: @"
     );
 }
+
+#[test]
+fn returns_structured_diagnostic_for_unmatched_parenthesis() {
+    let error = tokenize_with_diagnostics("x=1)").unwrap_err();
+
+    assert_eq!(error.position, SourcePosition { line: 1, column: 4 });
+
+    assert_eq!(error.message, "Unmatched closing parenthesis");
+}

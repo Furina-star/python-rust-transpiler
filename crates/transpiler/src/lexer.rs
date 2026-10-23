@@ -209,7 +209,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
 }
 
 // Convert source code line by line into tokens with line numbers and starting columns.
-pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
+pub fn tokenize_with_diagnostics(source: &str) -> Result<Vec<LocatedToken>, Diagnostic> {
     let mut tokens = Vec::new();
     let mut previous_code_line: Option<(usize, usize)> = None;
     let mut levels: Vec<usize> = vec![0];
@@ -226,7 +226,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         // Treat lines inside open parentheses as continuations.
         let continuation = !opening_lines.is_empty();
         let line_tokens = tokenize_line_located(line, line_number)
-            .map_err(|error| error.into_diagnostic(line_number).to_string())?;
+            .map_err(|error| error.into_diagnostic(line_number))?;
 
         // Separate code lines with a newline token unless the expression continues.
         if !continuation && let Some((previous_line, previous_length)) = previous_code_line {
@@ -263,7 +263,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
                         message: format!("Inconsistent indentation: {spaces} spaces"),
                     };
 
-                    return Err(diagnostic.to_string());
+                    return Err(diagnostic);
                 }
 
                 while *levels.last().unwrap() > spaces {
@@ -293,7 +293,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
                         message: String::from("Unmatched closing parenthesis"),
                     };
 
-                    return Err(diagnostic.to_string());
+                    return Err(diagnostic);
                 }
 
                 _ => {}
@@ -310,7 +310,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
             message: String::from("Unclosed parenthesis"),
         };
 
-        return Err(diagnostic.to_string());
+        return Err(diagnostic);
     }
 
     // Close remaining blocks at the end of the last code line.
@@ -346,6 +346,10 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
 }
 
 // Convert source code into tokens, handling newlines, indentation, and line continuations.
+pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
+    tokenize_with_diagnostics(source).map_err(|diagnostic| diagnostic.to_string())
+}
+
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     tokenize_with_positions(source)
         .map(|located| located.into_iter().map(|item| item.token).collect())
