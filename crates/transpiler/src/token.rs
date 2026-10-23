@@ -66,6 +66,7 @@ pub enum Token {
     Newline,
     Indent,
     Dedent,
+    Eof,
 }
 
 // Check that a located token preserves its token value and source position.

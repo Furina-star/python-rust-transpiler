@@ -989,13 +989,44 @@ fn closes_nested_positioned_blocks_at_eof() {
 fn positioned_tokenizer_handles_line_continuation() {
     let source = "total=(10+\n    20)";
 
-    let expected = tokenize(source).unwrap();
+    let actual = tokenize(source).unwrap();
 
-    let actual: Vec<Token> = tokenize_with_positions(source)
-        .unwrap()
-        .into_iter()
-        .map(|item| item.token)
-        .collect();
+    let expected = vec![
+        Token::Identifier("total".to_string()),
+        Token::Equal,
+        Token::LeftParen,
+        Token::Integer(10),
+        Token::Plus,
+        Token::Integer(20),
+        Token::RightParen,
+    ];
 
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn emits_final_newline_and_eof() {
+    let actual = tokenize("x=1").unwrap();
+
+    let expected = vec![
+        Token::Identifier("x".to_string()),
+        Token::Equal,
+        Token::Integer(1),
+        Token::Newline,
+        Token::Eof,
+    ];
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn emits_newline_before_dedent_and_eof() {
+    let actual = tokenize("if x:\n    y=1").unwrap();
+
+    assert!(actual.ends_with(&[
+        Token::Integer(1),
+        Token::Newline,
+        Token::Dedent,
+        Token::Eof,
+    ]));
 }

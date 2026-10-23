@@ -272,10 +272,8 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
                     opening_lines.push(line_number);
                 }
 
-                Token::RightParen => {
-                    if opening_lines.pop().is_none() {
-                        return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
-                    }
+                Token::RightParen if opening_lines.pop().is_none() => {
+                    return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
                 }
 
                 _ => {}
@@ -291,19 +289,33 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
     }
 
     // Close remaining blocks at the end of the last code line.
-    if let Some((last_line, last_length)) = previous_code_line {
-        while levels.len() > 1 {
-            levels.pop();
+    let end_position = previous_code_line
+        .map(|(line, length)| SourcePosition {
+            line,
+            column: length + 1,
+        })
+        .unwrap_or(SourcePosition { line: 1, column: 1 });
 
-            tokens.push(LocatedToken {
-                token: Token::Dedent,
-                position: SourcePosition {
-                    line: last_line,
-                    column: last_length + 1,
-                },
-            });
-        }
+    if previous_code_line.is_some() {
+        tokens.push(LocatedToken {
+            token: Token::Newline,
+            position: end_position,
+        });
     }
+
+    while levels.len() > 1 {
+        levels.pop();
+
+        tokens.push(LocatedToken {
+            token: Token::Dedent,
+            position: end_position,
+        });
+    }
+
+    tokens.push(LocatedToken {
+        token: Token::Eof,
+        position: end_position,
+    });
 
     Ok(tokens)
 }
