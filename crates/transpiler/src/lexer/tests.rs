@@ -919,6 +919,7 @@ fn clones_identifier_token() {
     assert_eq!(original, cloned);
 }
 
+// Check that each token records the correct line number and starting column.
 #[test]
 fn tracks_token_positions_in_line() {
     let actual = tokenize_line_located("health = 100", 2).unwrap();

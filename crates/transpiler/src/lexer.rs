@@ -82,7 +82,7 @@ struct ScanError {
     message: String,
 }
 
-// Convert a single line into tokens, ignoring spaces and comments.
+// Convert a single line into tokens with source positions, ignoring spaces and comments.
 fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<LocatedToken>, ScanError> {
     let mut tokens = Vec::new();
     let mut chars = source.chars().enumerate().peekable();
@@ -200,7 +200,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                 }
 
                 // Classify keywords, booleans, and identifiers.
-                let token = match identifier.as_str() {
+                match identifier.as_str() {
                     "def" => Token::Def,
                     "return" => Token::Return,
                     "if" => Token::If,
@@ -212,9 +212,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
                     "True" => Token::Boolean(true),
                     "False" => Token::Boolean(false),
                     _ => Token::Identifier(identifier),
-                };
-
-                token
+                }
             }
             // Ignore the rest of this physical line after a comment marker.
             '#' => break,
@@ -244,6 +242,7 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
     Ok(tokens)
 }
 
+// Convert a single line into tokens and discard their source positions.
 fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
     let located = tokenize_line_located(source, 1)?;
 
