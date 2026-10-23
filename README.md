@@ -118,3 +118,10 @@ These examples demonstrate Rust language features independently of the compiler 
 - [Project State](docs/PROJECT_STATE.md)
 - [Planned Architecture](docs/ARCHITECTURE.md)
 - [Technical Decisions](docs/DECISIONS.md)
+
+## References & Acknowledgments
+
+- **Robert Nystrom — [*Crafting Interpreters*](https://craftinginterpreters.com/)**  
+  An educational reference on programming language implementation. Its discussions of recursive descent parsing and tree-walk interpretation provide valuable examples of how recursion is applied in interpreters and language processing.
+
+Recursion Lab is an independent educational project focused on understanding recursive algorithms and their applications. This acknowledgment does not imply affiliation with or endorsement by the author.
