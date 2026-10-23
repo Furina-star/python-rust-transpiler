@@ -944,3 +944,38 @@ fn tracks_token_positions_in_line() {
 
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn public_tokenize_with_positions_single_line() {
+    let actual = tokenize_with_positions("x = 42").unwrap();
+
+    assert_eq!(actual.len(), 3);
+
+    assert_eq!(actual[0].token, Token::Identifier("x".to_string()));
+    assert_eq!(actual[0].position, SourcePosition { line: 1, column: 1 });
+
+    assert_eq!(actual[1].token, Token::Equal);
+    assert_eq!(actual[1].position, SourcePosition { line: 1, column: 3 });
+
+    assert_eq!(actual[2].token, Token::Integer(42));
+    assert_eq!(actual[2].position, SourcePosition { line: 1, column: 5 });
+}
+
+#[test]
+fn tracks_positions_across_lines() {
+    let actual = tokenize_with_positions("x = 10\ny = 20").unwrap();
+
+    let y = actual
+        .iter()
+        .find(|item| item.token == Token::Identifier("y".to_string()))
+        .unwrap();
+
+    assert_eq!(y.position, SourcePosition { line: 2, column: 1 });
+
+    let twenty = actual
+        .iter()
+        .find(|item| item.token == Token::Integer(20))
+        .unwrap();
+
+    assert_eq!(twenty.position, SourcePosition { line: 2, column: 5 });
+}

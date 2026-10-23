@@ -249,6 +249,25 @@ fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
     Ok(located.into_iter().map(|item| item.token).collect())
 }
 
+pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
+    let mut tokens = Vec::new();
+
+    for (index, line) in source.lines().enumerate() {
+        let line_number = index + 1;
+
+        let line_tokens = tokenize_line_located(line, line_number).map_err(|error| {
+            format!(
+                "Line {line_number}, Column {}: {}",
+                error.column, error.message
+            )
+        })?;
+
+        tokens.extend(line_tokens);
+    }
+
+    Ok(tokens)
+}
+
 // Convert source code into tokens, handling newlines, indentation, and line continuations.
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
