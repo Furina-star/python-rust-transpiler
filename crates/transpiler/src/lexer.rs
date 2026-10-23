@@ -28,53 +28,6 @@ fn count_leading_spaces(line: &str) -> usize {
     spaces
 }
 
-// Push a new indentation level and emit Indent.
-fn record_indent_increase(spaces: usize, levels: &mut Vec<usize>, tokens: &mut Vec<Token>) {
-    let current = *levels.last().unwrap();
-
-    if spaces > current {
-        levels.push(spaces);
-        tokens.push(Token::Indent);
-    }
-}
-
-// Process indentation changes.
-fn process_indentation(
-    spaces: usize,
-    levels: &mut Vec<usize>,
-    tokens: &mut Vec<Token>,
-) -> Result<(), String> {
-    let current = *levels.last().unwrap();
-
-    if spaces > current {
-        record_indent_increase(spaces, levels, tokens);
-    } else if spaces < current {
-        record_indent_decrease(spaces, levels, tokens)?;
-    }
-
-    Ok(())
-}
-
-// Validate dedentation, pop levels, and emit Dedent tokens.
-fn record_indent_decrease(
-    spaces: usize,
-    levels: &mut Vec<usize>,
-    tokens: &mut Vec<Token>,
-) -> Result<(), String> {
-    let current = *levels.last().unwrap();
-
-    if spaces < current && !levels.contains(&spaces) {
-        return Err(format!("Inconsistent indentation: {spaces} spaces"));
-    }
-
-    while *levels.last().unwrap() > spaces {
-        levels.pop().unwrap();
-        tokens.push(Token::Dedent);
-    }
-
-    Ok(())
-}
-
 // Store the column number and message for an error found while tokenizing a line.
 #[derive(Debug)]
 struct ScanError {
@@ -242,13 +195,6 @@ fn tokenize_line_located(source: &str, line_number: usize) -> Result<Vec<Located
     Ok(tokens)
 }
 
-// Convert a single line into tokens and discard their source positions.
-fn tokenize_line(source: &str) -> Result<Vec<Token>, ScanError> {
-    let located = tokenize_line_located(source, 1)?;
-
-    Ok(located.into_iter().map(|item| item.token).collect())
-}
-
 // Convert source code line by line into tokens with line numbers and starting columns.
 pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String> {
     let mut tokens = Vec::new();
@@ -274,7 +220,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         })?;
 
         // Separate code lines with a newline token unless the expression continues.
-        if !continuation && let Some((previous_line, previous_length))  = previous_code_line {
+        if !continuation && let Some((previous_line, previous_length)) = previous_code_line {
             tokens.push(LocatedToken {
                 token: Token::Newline,
                 position: SourcePosition {
@@ -328,9 +274,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
 
                 Token::RightParen => {
                     if opening_lines.pop().is_none() {
-                        return Err(format!(
-                            "Line {line_number}: Unmatched closing parenthesis"
-                        ));
+                        return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
                     }
                 }
 
@@ -343,9 +287,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
     }
 
     if let Some(&opening_line) = opening_lines.last() {
-        return Err(format!(
-            "Line {opening_line}: Unclosed parenthesis"
-        ));
+        return Err(format!("Line {opening_line}: Unclosed parenthesis"));
     }
 
     // Close remaining blocks at the end of the last code line.
@@ -368,65 +310,8 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
 
 // Convert source code into tokens, handling newlines, indentation, and line continuations.
 pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
-    let mut tokens: Vec<Token> = Vec::new();
-    let mut levels: Vec<usize> = vec![0];
-    let mut saw_code_line = false;
-    let mut opening_lines: Vec<usize> = Vec::new();
-
-    for (index, line) in source.lines().enumerate() {
-        let line_number = index + 1;
-        let content = line.trim_start_matches(' ');
-
-        if content.is_empty() || content.starts_with('#') {
-            continue;
-        }
-
-        let continuation = !opening_lines.is_empty();
-
-        if saw_code_line && !continuation {
-            tokens.push(Token::Newline);
-        }
-
-        saw_code_line = true;
-
-        if !continuation {
-            let spaces = count_leading_spaces(line);
-
-            process_indentation(spaces, &mut levels, &mut tokens)
-                .map_err(|message| format!("Line {line_number}: {message}"))?;
-        }
-
-        let line_tokens = tokenize_line(line).map_err(|error| {
-            format!(
-                "Line {line_number}, Column {}: {}",
-                error.column, error.message
-            )
-        })?;
-
-        for token in &line_tokens {
-            match token {
-                Token::LeftParen => {
-                    opening_lines.push(line_number);
-                }
-
-                Token::RightParen if opening_lines.pop().is_none() => {
-                    return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
-                }
-
-                _ => {}
-            }
-        }
-
-        tokens.extend(line_tokens);
-    }
-
-    if let Some(&opening_line) = opening_lines.last() {
-        return Err(format!("Line {opening_line}: Unclosed parenthesis"));
-    }
-
-    record_indent_decrease(0, &mut levels, &mut tokens)?;
-
-    Ok(tokens)
+    tokenize_with_positions(source)
+        .map(|located| located.into_iter().map(|item| item.token).collect())
 }
 
 #[cfg(test)]
