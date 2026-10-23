@@ -1001,7 +1001,7 @@ fn tracks_newline_position() {
 fn tracks_indent_position() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
 
-    assert_eq!(actual.len(), 8);
+    assert_eq!(actual.len(), 9);
 
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[4].token, Token::Indent);
@@ -1032,4 +1032,40 @@ fn rejects_invalid_dedent_with_positions() {
     let error = tokenize_with_positions(source).unwrap_err();
 
     assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
+}
+
+#[test]
+fn closes_positioned_block_at_eof() {
+    let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
+
+    assert_eq!(
+        actual.last(),
+        Some(&LocatedToken {
+            token: Token::Dedent,
+            position: SourcePosition { line: 2, column: 8 },
+        })
+    );
+}
+
+#[test]
+fn closes_nested_positioned_blocks_at_eof() {
+    let source = "if x:\n    if y:\n        z=1";
+    let actual = tokenize_with_positions(source).unwrap();
+
+    let dedents: Vec<_> = actual
+        .iter()
+        .filter(|item| item.token == Token::Dedent)
+        .collect();
+
+    assert_eq!(dedents.len(), 2);
+
+    for dedent in dedents {
+        assert_eq!(
+            dedent.position,
+            SourcePosition {
+                line: 3,
+                column: 12,
+            }
+        );
+    }
 }

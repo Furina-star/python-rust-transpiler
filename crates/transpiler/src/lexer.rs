@@ -316,6 +316,20 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         previous_code_line = Some((line_number, line.chars().count()));
     }
 
+    if let Some((last_line, last_length)) = previous_code_line {
+        while levels.len() > 1 {
+            levels.pop();
+
+            tokens.push(LocatedToken {
+                token: Token::Dedent,
+                position: SourcePosition {
+                    line: last_line,
+                    column: last_length + 1,
+                },
+            });
+        }
+    }
+
     Ok(tokens)
 }
 
