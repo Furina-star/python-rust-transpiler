@@ -7,7 +7,13 @@ use super::*;
 fn tokenizes_plus_and_minus() {
     let actual = tokenize("+ - +").unwrap();
 
-    let expected = vec![Token::Plus, Token::Minus, Token::Plus];
+    let expected = vec![
+        Token::Plus,
+        Token::Minus,
+        Token::Plus,
+        Token::Newline,
+        Token::Eof,
+    ];
 
     assert_eq!(actual, expected);
 }
@@ -25,7 +31,13 @@ fn reject_invalid_character() {
 fn tokenizes_integer_literals() {
     let actual = tokenize("123+45").unwrap();
 
-    let expected = vec![Token::Integer(123), Token::Plus, Token::Integer(45)];
+    let expected = vec![
+        Token::Integer(123),
+        Token::Plus,
+        Token::Integer(45),
+        Token::Newline,
+        Token::Eof,
+    ];
 
     assert_eq!(actual, expected);
 }
@@ -49,25 +61,27 @@ fn tokenizes_mixed_arithmetic() {
         Token::Integer(12),
         Token::Minus,
         Token::Integer(3),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
 }
 
-// Check that empty input produces no tokens.
+// Check that empty input produces only EOF.
 #[test]
 fn handles_empty_input() {
     let actual = tokenize("").unwrap();
 
-    assert!(actual.is_empty());
+    assert_eq!(actual, vec![Token::Eof]);
 }
 
-// Check that input containing only spaces produces no tokens.
+// Check that spaces-only input produces only EOF.
 #[test]
 fn handles_spaces_only() {
     let actual = tokenize("     ").unwrap();
 
-    assert!(actual.is_empty());
+    assert_eq!(actual, vec![Token::Eof]);
 }
 
 // Check that an invalid character after valid tokens still returns an error.
@@ -110,6 +124,8 @@ fn tokenizes_identifiers() {
         Token::Identifier(String::from("health")),
         Token::Identifier(String::from("player")),
         Token::Identifier(String::from("_total")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -124,6 +140,8 @@ fn tokenizes_keywords() {
         Token::Def,
         Token::Return,
         Token::Identifier(String::from("health")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -140,6 +158,8 @@ fn recognizes_keyword_boundaries() {
         Token::Return,
         Token::Identifier(String::from("returnValue")),
         Token::Identifier(String::from("player1")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -155,6 +175,8 @@ fn tokenizes_punctuation() {
         Token::Colon,
         Token::Comma,
         Token::RightParen,
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -165,7 +187,7 @@ fn tokenizes_punctuation() {
 fn tokenizes_arrow_and_minus() {
     let actual = tokenize("-> -").unwrap();
 
-    let expected = vec![Token::Arrow, Token::Minus];
+    let expected = vec![Token::Arrow, Token::Minus, Token::Newline, Token::Eof];
 
     assert_eq!(actual, expected);
 }
@@ -179,6 +201,8 @@ fn tokenizes_return_annotation() {
         Token::Identifier(String::from("add")),
         Token::Arrow,
         Token::Identifier(String::from("int")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -193,6 +217,8 @@ fn tokenizes_assignment() {
         Token::Identifier(String::from("health")),
         Token::Equal,
         Token::Integer(100),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -207,6 +233,8 @@ fn tokenizes_equality() {
         Token::Identifier(String::from("health")),
         Token::EqualEqual,
         Token::Integer(100),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -224,6 +252,8 @@ fn tokenizes_less_comparisons() {
         Token::Identifier(String::from("b")),
         Token::LessEqual,
         Token::Integer(20),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -241,6 +271,8 @@ fn tokenizes_greater_comparisons() {
         Token::Identifier(String::from("b")),
         Token::GreaterEqual,
         Token::Integer(20),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -255,6 +287,8 @@ fn tokenizes_inequality() {
         Token::Identifier(String::from("health")),
         Token::NotEqual,
         Token::Integer(100),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -278,6 +312,8 @@ fn tokenizes_control_flow_keywords() {
         Token::Identifier(String::from("health")),
         Token::Else,
         Token::While,
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -293,6 +329,8 @@ fn recognizes_control_flow_keyword_boundaries() {
         Token::Identifier(String::from("iffy")),
         Token::Identifier(String::from("elsewhere")),
         Token::Identifier(String::from("while_loop")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -303,7 +341,13 @@ fn recognizes_control_flow_keyword_boundaries() {
 fn tokenizes_logical_keywords() {
     let actual = tokenize("and or not").unwrap();
 
-    let expected = vec![Token::And, Token::Or, Token::Not];
+    let expected = vec![
+        Token::And,
+        Token::Or,
+        Token::Not,
+        Token::Newline,
+        Token::Eof,
+    ];
 
     assert_eq!(actual, expected);
 }
@@ -317,6 +361,8 @@ fn recognizes_logical_keyword_boundaries() {
         Token::Identifier(String::from("android")),
         Token::Identifier(String::from("origin")),
         Token::Identifier(String::from("noteworthy")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -332,6 +378,8 @@ fn tokenizes_boolean_literals() {
         Token::Boolean(false),
         Token::Not,
         Token::Boolean(true),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -346,6 +394,8 @@ fn recognizes_boolean_literal_boundaries() {
         Token::Identifier(String::from("TrueValue")),
         Token::Identifier(String::from("False_alarm")),
         Token::Identifier(String::from("true")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -362,6 +412,8 @@ fn tokenizes_multiplication() {
         Token::Identifier(String::from("damage")),
         Token::Plus,
         Token::Integer(3),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -382,6 +434,8 @@ fn tokenizes_division_operators() {
         Token::Integer(7),
         Token::Percent,
         Token::Integer(2),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -399,6 +453,8 @@ fn tokenizes_divmod_call_syntax() {
         Token::Comma,
         Token::Integer(2),
         Token::RightParen,
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -417,6 +473,8 @@ fn tokenizes_newlines() {
         Token::Identifier(String::from("y")),
         Token::Equal,
         Token::Integer(20),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -435,6 +493,8 @@ fn tokenizes_windows_newlines() {
         Token::Identifier(String::from("y")),
         Token::Equal,
         Token::Integer(20),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -470,6 +530,8 @@ fn tokenizes_multiline_indentation() {
         Token::Identifier(String::from("z")),
         Token::Equal,
         Token::Integer(2),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -510,6 +572,8 @@ fn ignores_blank_lines_in_blocks() {
         Token::Identifier(String::from("w")),
         Token::Equal,
         Token::Integer(3),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -524,6 +588,8 @@ fn ignores_leading_blank_lines() {
         Token::Identifier(String::from("x")),
         Token::Equal,
         Token::Integer(10),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -543,7 +609,9 @@ fn closes_indentation_at_eof() {
         Token::Identifier(String::from("y")),
         Token::Equal,
         Token::Integer(1),
+        Token::Newline,
         Token::Dedent,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -554,7 +622,7 @@ fn closes_indentation_at_eof() {
 fn closes_nested_indentation_at_eof() {
     let actual = tokenize("if x:\n    if y:\n        z=1").unwrap();
 
-    assert!(actual.ends_with(&[Token::Dedent, Token::Dedent]));
+    assert!(actual.ends_with(&[Token::Dedent, Token::Dedent, Token::Eof]));
 }
 
 // Check that inline comments are ignored while statement newlines are preserved.
@@ -570,6 +638,8 @@ fn ignores_inline_comments() {
         Token::Identifier(String::from("y")),
         Token::Equal,
         Token::Integer(2),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -627,6 +697,8 @@ fn tokenizes_parenthesized_multiline_expression() {
         Token::Plus,
         Token::Integer(20),
         Token::RightParen,
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -666,7 +738,9 @@ fn public_tokenize_handles_indentation() {
         Token::Identifier(String::from("y")),
         Token::Equal,
         Token::Integer(1),
+        Token::Newline,
         Token::Dedent,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -725,15 +799,20 @@ fn handles_eof_after_trailing_comments() {
 
     assert_eq!(with_comments, without_comments);
 
-    assert!(with_comments.ends_with(&[Token::Integer(1), Token::Dedent]));
+    assert!(with_comments.ends_with(&[
+        Token::Integer(1),
+        Token::Newline,
+        Token::Dedent,
+        Token::Eof,
+    ]));
 }
 
-// Check that input containing only comments and blank lines produces no tokens.
+// Check that comment-only and blank input produces only EOF.
 #[test]
 fn handles_comments_only_source() {
     let actual = tokenize("# First comment\n    # Second comment\n\n").unwrap();
 
-    assert!(actual.is_empty());
+    assert_eq!(actual, vec![Token::Eof]);
 }
 
 // Check that an invalid character error reports its line and column, including leading spaces.
@@ -780,7 +859,9 @@ fn tokenizes_complete_typed_function() {
         Token::Identifier(String::from("a")),
         Token::Plus,
         Token::Identifier(String::from("b")),
+        Token::Newline,
         Token::Dedent,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -819,6 +900,8 @@ fn accepts_integer_separated_from_identifier() {
         Token::Integer(5),
         Token::Plus,
         Token::Identifier(String::from("abc")),
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -864,7 +947,7 @@ fn tracks_token_positions_in_line() {
 fn public_tokenize_with_positions_single_line() {
     let actual = tokenize_with_positions("x = 42").unwrap();
 
-    assert_eq!(actual.len(), 3);
+    assert_eq!(actual.len(), 5);
 
     assert_eq!(actual[0].token, Token::Identifier("x".to_string()));
     assert_eq!(actual[0].position, SourcePosition { line: 1, column: 1 });
@@ -874,6 +957,11 @@ fn public_tokenize_with_positions_single_line() {
 
     assert_eq!(actual[2].token, Token::Integer(42));
     assert_eq!(actual[2].position, SourcePosition { line: 1, column: 5 });
+
+    assert_eq!(actual[3].token, Token::Newline);
+    assert_eq!(actual[3].position, SourcePosition { line: 1, column: 7 });
+    assert_eq!(actual[4].token, Token::Eof);
+    assert_eq!(actual[4].position, SourcePosition { line: 1, column: 7 });
 }
 
 // Check that tokens on subsequent lines retain the correct line numbers and starting columns.
@@ -901,7 +989,7 @@ fn tracks_positions_across_lines() {
 fn tracks_newline_position() {
     let actual = tokenize_with_positions("x=1\ny=2").unwrap();
 
-    assert_eq!(actual.len(), 7);
+    assert_eq!(actual.len(), 9);
 
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[3].position, SourcePosition { line: 1, column: 4 });
@@ -914,7 +1002,7 @@ fn tracks_newline_position() {
 fn tracks_indent_position() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
 
-    assert_eq!(actual.len(), 9);
+    assert_eq!(actual.len(), 11);
 
     assert_eq!(actual[3].token, Token::Newline);
     assert_eq!(actual[4].token, Token::Indent);
@@ -953,12 +1041,13 @@ fn closes_positioned_block_at_eof() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
 
     assert_eq!(
-        actual.last(),
+        actual.iter().rev().nth(1),
         Some(&LocatedToken {
             token: Token::Dedent,
             position: SourcePosition { line: 2, column: 8 },
         })
     );
+    assert_eq!(actual.last().map(|item| &item.token), Some(&Token::Eof));
 }
 
 // Check that Dedent tokens close all nested blocks with the correct position at the end of input.
@@ -999,6 +1088,8 @@ fn positioned_tokenizer_handles_line_continuation() {
         Token::Plus,
         Token::Integer(20),
         Token::RightParen,
+        Token::Newline,
+        Token::Eof,
     ];
 
     assert_eq!(actual, expected);
@@ -1023,10 +1114,5 @@ fn emits_final_newline_and_eof() {
 fn emits_newline_before_dedent_and_eof() {
     let actual = tokenize("if x:\n    y=1").unwrap();
 
-    assert!(actual.ends_with(&[
-        Token::Integer(1),
-        Token::Newline,
-        Token::Dedent,
-        Token::Eof,
-    ]));
+    assert!(actual.ends_with(&[Token::Integer(1), Token::Newline, Token::Dedent, Token::Eof,]));
 }
