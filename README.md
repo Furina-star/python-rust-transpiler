@@ -124,4 +124,4 @@ These examples demonstrate Rust language features independently of the compiler 
 - **Robert Nystrom — [*Crafting Interpreters*](https://craftinginterpreters.com/)**  
   An educational reference on programming language implementation. Its discussions of recursive descent parsing and tree-walk interpretation provide valuable examples of how recursion is applied in interpreters and language processing.
 
-Recursion Lab is an independent educational project focused on understanding recursive algorithms and their applications. This acknowledgment does not imply affiliation with or endorsement by the author.
+Python-to-Rust Transpiler is an independent project that aims to translate a restricted, statically typed Python-like language into Rust source code. This acknowledgment does not imply affiliation with or endorsement by Robert Nystrom.
