@@ -292,6 +292,24 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
                     column: spaces + 1,
                 },
             });
+        } else if spaces < *levels.last().unwrap() {
+            if !levels.contains(&spaces) {
+                return Err(format!(
+                    "Line {line_number}: Inconsistent indentation: {spaces} spaces"
+                ));
+            }
+
+            while *levels.last().unwrap() > spaces {
+                levels.pop().unwrap();
+
+                tokens.push(LocatedToken {
+                    token: Token::Dedent,
+                    position: SourcePosition {
+                        line: line_number,
+                        column: spaces + 1,
+                    },
+                });
+            }
         }
 
         tokens.extend(line_tokens);

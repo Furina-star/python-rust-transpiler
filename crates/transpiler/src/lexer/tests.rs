@@ -983,6 +983,7 @@ fn tracks_positions_across_lines() {
     assert_eq!(twenty.position, SourcePosition { line: 2, column: 5 });
 }
 
+// Check that a newline token records the position just after the previous line's last character.
 #[test]
 fn tracks_newline_position() {
     let actual = tokenize_with_positions("x=1\ny=2").unwrap();
@@ -995,6 +996,7 @@ fn tracks_newline_position() {
     assert_eq!(actual[4].position, SourcePosition { line: 2, column: 1 });
 }
 
+// Check that an Indent token records the position of the first token on the indented line.
 #[test]
 fn tracks_indent_position() {
     let actual = tokenize_with_positions("if x:\n    y=1").unwrap();
@@ -1007,4 +1009,27 @@ fn tracks_indent_position() {
     assert_eq!(actual[4].position, SourcePosition { line: 2, column: 5 });
 
     assert_eq!(actual[5].position, SourcePosition { line: 2, column: 5 });
+}
+
+// Check that a Dedent token records the position of the first token on the dedented line.
+#[test]
+fn tracks_dedent_position() {
+    let source = "if x:\n    y=1\nz=2";
+    let actual = tokenize_with_positions(source).unwrap();
+
+    let dedent = actual
+        .iter()
+        .find(|item| item.token == Token::Dedent)
+        .unwrap();
+
+    assert_eq!(dedent.position, SourcePosition { line: 3, column: 1 });
+}
+
+// Check that tokenize_with_positions reports an invalid dedent with its line number and space count.
+#[test]
+fn rejects_invalid_dedent_with_positions() {
+    let source = "if x:\n    y=1\n  z=2";
+    let error = tokenize_with_positions(source).unwrap_err();
+
+    assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
 }
