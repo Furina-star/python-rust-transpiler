@@ -213,7 +213,7 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
     let mut tokens = Vec::new();
     let mut previous_code_line: Option<(usize, usize)> = None;
     let mut levels: Vec<usize> = vec![0];
-    let mut opening_lines: Vec<usize> = Vec::new();
+    let mut opening_lines: Vec<SourcePosition> = Vec::new();
 
     for (index, line) in source.lines().enumerate() {
         let line_number = index + 1;
@@ -255,9 +255,15 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
                 });
             } else if spaces < *levels.last().unwrap() {
                 if !levels.contains(&spaces) {
-                    return Err(format!(
-                        "Line {line_number}: Inconsistent indentation: {spaces} spaces"
-                    ));
+                    let diagnostic = Diagnostic {
+                        position: SourcePosition {
+                            line: line_number,
+                            column: spaces + 1,
+                        },
+                        message: format!("Inconsistent indentation: {spaces} spaces"),
+                    };
+
+                    return Err(diagnostic.to_string());
                 }
 
                 while *levels.last().unwrap() > spaces {
@@ -278,11 +284,16 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         for item in &line_tokens {
             match &item.token {
                 Token::LeftParen => {
-                    opening_lines.push(line_number);
+                    opening_lines.push(item.position);
                 }
 
                 Token::RightParen if opening_lines.pop().is_none() => {
-                    return Err(format!("Line {line_number}: Unmatched closing parenthesis"));
+                    let diagnostic = Diagnostic {
+                        position: item.position,
+                        message: String::from("Unmatched closing parenthesis"),
+                    };
+
+                    return Err(diagnostic.to_string());
                 }
 
                 _ => {}
@@ -293,8 +304,13 @@ pub fn tokenize_with_positions(source: &str) -> Result<Vec<LocatedToken>, String
         previous_code_line = Some((line_number, line.chars().count()));
     }
 
-    if let Some(&opening_line) = opening_lines.last() {
-        return Err(format!("Line {opening_line}: Unclosed parenthesis"));
+    if let Some(&opening_position) = opening_lines.last() {
+        let diagnostic = Diagnostic {
+            position: opening_position,
+            message: String::from("Unclosed parenthesis"),
+        };
+
+        return Err(diagnostic.to_string());
     }
 
     // Close remaining blocks at the end of the last code line.

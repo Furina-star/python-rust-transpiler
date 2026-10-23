@@ -751,7 +751,10 @@ fn public_tokenize_handles_indentation() {
 fn public_tokenize_rejects_unclosed_parentheses() {
     let result = tokenize("x=(10+20");
 
-    assert_eq!(result.unwrap_err(), "Line 1: Unclosed parenthesis");
+    assert_eq!(
+        result.unwrap_err(),
+        "Line 1, Column 3: Unclosed parenthesis"
+    );
 }
 
 // Check the error line number after blank lines and comments.
@@ -767,7 +770,10 @@ fn reports_invalid_character_line() {
 fn reports_inconsistent_indentation_line() {
     let error = tokenize("if x:\n    y=1\n  z=2").unwrap_err();
 
-    assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
+    assert_eq!(
+        error,
+        "Line 3, Column 3: Inconsistent indentation: 2 spaces"
+    );
 }
 
 // Check that an unmatched closing parenthesis error reports its line number.
@@ -775,7 +781,7 @@ fn reports_inconsistent_indentation_line() {
 fn reports_unmatched_closing_parenthesis_line() {
     let error = tokenize("x=1\ny=2\nz=3)").unwrap_err();
 
-    assert_eq!(error, "Line 3: Unmatched closing parenthesis");
+    assert_eq!(error, "Line 3, Column 4: Unmatched closing parenthesis");
 }
 
 // Check that an unclosed parenthesis error reports the opening line, including nesting.
@@ -783,11 +789,11 @@ fn reports_unmatched_closing_parenthesis_line() {
 fn reports_unclosed_parenthesis_opening_line() {
     let error = tokenize("x=1\nresult=(2+3").unwrap_err();
 
-    assert_eq!(error, "Line 2: Unclosed parenthesis");
+    assert_eq!(error, "Line 2, Column 8: Unclosed parenthesis");
 
     let nested_error = tokenize("x=(\n    y=(1+2)").unwrap_err();
 
-    assert_eq!(nested_error, "Line 1: Unclosed parenthesis");
+    assert_eq!(nested_error, "Line 1, Column 3: Unclosed parenthesis");
 }
 
 // Check that trailing comments and blank lines still allow the final block to close.
@@ -1032,7 +1038,10 @@ fn rejects_invalid_dedent_with_positions() {
     let source = "if x:\n    y=1\n  z=2";
     let error = tokenize_with_positions(source).unwrap_err();
 
-    assert_eq!(error, "Line 3: Inconsistent indentation: 2 spaces");
+    assert_eq!(
+        error,
+        "Line 3, Column 3: Inconsistent indentation: 2 spaces"
+    );
 }
 
 // Check that a Dedent token closes an open block with the correct position at the end of input.
