@@ -62,4 +62,48 @@ mod tests {
             _ => panic!("Expected a binary expression"),
         }
     }
+
+    // Check that a binary expression can contain another binary expression.
+    #[test]
+    fn stores_nested_binary_addition() {
+        let inner = Expr::Binary {
+            left: Box::new(Expr::Integer(5)),
+            operator: BinaryOp::Add,
+            right: Box::new(Expr::Integer(2)),
+        };
+
+        let outer = Expr::Binary {
+            left: Box::new(Expr::Integer(10)),
+            operator: BinaryOp::Add,
+            right: Box::new(inner),
+        };
+
+        match outer {
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => {
+                assert_eq!(*left, Expr::Integer(10));
+                assert_eq!(operator, BinaryOp::Add);
+
+                // Here, right contains another Expr::Binary.
+                match *right {
+                    Expr::Binary {
+                        left: inner_left,
+                        operator: inner_operator,
+                        right: inner_right,
+                    } => {
+                        assert_eq!(*inner_left, Expr::Integer(5));
+                        assert_eq!(inner_operator, BinaryOp::Add);
+                        assert_eq!(*inner_right, Expr::Integer(2));
+                    }
+
+                    _ => panic!("Expected inner binary expression"),
+                }
+            }
+
+            _ => panic!("Expected outer binary expression"),
+        }
+    }
 }
