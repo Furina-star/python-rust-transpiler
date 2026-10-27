@@ -10,12 +10,23 @@ pub enum Expr {
         operator: BinaryOp,
         right: Box<Expr>,
     },
+
+    Unary {
+        operator: UnaryOp,
+        operand: Box<Expr>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
     Add,
     Multiply,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UnaryOp {
+    Negate,
+    Not,
 }
 
 #[cfg(test)]
@@ -103,11 +114,11 @@ mod tests {
                     _ => panic!("Expected inner binary expression"),
                 }
             }
-
             _ => panic!("Expected outer binary expression"),
         }
     }
 
+    // Check that an addition expression can contain a multiplication expression.
     #[test]
     fn stores_multiplication_inside_addition() {
         let multiplied = Expr::Binary {
@@ -145,8 +156,24 @@ mod tests {
                     _ => panic!("Expected multiplication"),
                 }
             }
-
             _ => panic!("Expected addition"),
+        }
+    }
+
+    // Check that a unary negation expression preserves its operand and operator.
+    #[test]
+    fn stores_unary_negation() {
+        let expression = Expr::Unary {
+            operator: UnaryOp::Negate,
+            operand: Box::new(Expr::Integer(5)),
+        };
+
+        match expression {
+            Expr::Unary { operator, operand } => {
+                assert_eq!(operator, UnaryOp::Negate);
+                assert_eq!(*operand, Expr::Integer(5));
+            }
+            _ => panic!("Expected unary expression"),
         }
     }
 }
