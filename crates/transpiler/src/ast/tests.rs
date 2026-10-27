@@ -170,3 +170,26 @@ fn stores_identifier_expression() {
 
     assert_eq!(expression, Expr::Identifier(String::from("total")));
 }
+
+// Check that floor division preserves its operands and operator.
+#[test]
+fn stores_floor_division() {
+    let expression = Expr::Binary {
+        left: Box::new(Expr::Integer(9)),
+        operator: BinaryOp::FloorDivide,
+        right: Box::new(Expr::Integer(2)),
+    };
+
+    match expression {
+        Expr::Binary {
+            left,
+            operator,
+            right,
+        } => {
+            assert_eq!(*left, Expr::Integer(9));
+            assert_eq!(operator, BinaryOp::FloorDivide);
+            assert_eq!(*right, Expr::Integer(2));
+        }
+        _ => panic!("Expected binary expression"),
+    }
+}

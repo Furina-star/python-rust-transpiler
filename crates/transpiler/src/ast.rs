@@ -1,6 +1,6 @@
 //! Abstract syntax tree representations for expressions.
 
-// Represent literals, identifiers, binary operations, and unary operations in the syntax tree.
+// Represent expressions in the syntax tree.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Integer(i32),
@@ -19,14 +19,18 @@ pub enum Expr {
     },
 }
 
-// Represent addition and multiplication operators for binary expressions.
+// Represent operators for binary expressions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
     Add,
     Multiply,
+    Subtract,
+    Divide,
+    FloorDivide,
+    Modulo,
 }
 
-// Represent arithmetic negation and logical NOT operators for unary expressions.
+// Represent operators for unary expressions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnaryOp {
     Negate,
