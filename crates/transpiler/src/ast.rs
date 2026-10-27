@@ -15,6 +15,7 @@ pub enum Expr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
     Add,
+    Multiply,
 }
 
 #[cfg(test)]
@@ -104,6 +105,48 @@ mod tests {
             }
 
             _ => panic!("Expected outer binary expression"),
+        }
+    }
+
+    #[test]
+    fn stores_multiplication_inside_addition() {
+        let multiplied = Expr::Binary {
+            left: Box::new(Expr::Integer(5)),
+            operator: BinaryOp::Multiply,
+            right: Box::new(Expr::Integer(2)),
+        };
+
+        let expression = Expr::Binary {
+            left: Box::new(Expr::Integer(10)),
+            operator: BinaryOp::Add,
+            right: Box::new(multiplied),
+        };
+
+        match expression {
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => {
+                assert_eq!(*left, Expr::Integer(10));
+                assert_eq!(operator, BinaryOp::Add);
+
+                match *right {
+                    Expr::Binary {
+                        left: inner_left,
+                        operator: inner_operator,
+                        right: inner_right,
+                    } => {
+                        assert_eq!(*inner_left, Expr::Integer(5));
+                        assert_eq!(inner_operator, BinaryOp::Multiply);
+                        assert_eq!(*inner_right, Expr::Integer(2));
+                    }
+
+                    _ => panic!("Expected multiplication"),
+                }
+            }
+
+            _ => panic!("Expected addition"),
         }
     }
 }
