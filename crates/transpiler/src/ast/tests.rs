@@ -1,4 +1,4 @@
-//! Unit tests for literals, identifiers, nested binary expressions, and unary operations in the syntax tree.
+//! Unit tests for abstract syntax tree structures.
 
 use super::*;
 
