@@ -17,6 +17,11 @@ pub enum Expr {
         operator: UnaryOp,
         operand: Box<Expr>,
     },
+
+    Call {
+        callee: Box<Expr>,
+        arguments: Vec<Expr>,
+    },
 }
 
 // Represent operators for binary expressions.

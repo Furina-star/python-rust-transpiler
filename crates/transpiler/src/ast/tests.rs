@@ -234,3 +234,20 @@ fn stores_logical_and() {
 
     assert_eq!(expression, expected);
 }
+
+// Check that a function call preserves its callee and arguments.
+#[test]
+fn stores_function_call() {
+    let expression = Expr::Call {
+        callee: Box::new(Expr::Identifier(String::from("add"))),
+        arguments: vec![Expr::Integer(10), Expr::Integer(5)],
+    };
+
+    match expression {
+        Expr::Call { callee, arguments } => {
+            assert_eq!(*callee, Expr::Identifier(String::from("add")));
+            assert_eq!(arguments, vec![Expr::Integer(10), Expr::Integer(5)]);
+        }
+        _ => panic!("Expected function call"),
+    }
+}
