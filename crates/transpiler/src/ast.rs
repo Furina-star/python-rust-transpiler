@@ -24,6 +24,12 @@ pub enum Expr {
     },
 }
 
+// Represent statements in the syntax tree
+#[derive(Debug, Clone, PartialEq)]
+pub enum Stmt {
+    Return { value: Expr },
+}
+
 // Represent operators for binary expressions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {

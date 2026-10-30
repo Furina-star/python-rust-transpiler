@@ -251,3 +251,15 @@ fn stores_function_call() {
         _ => panic!("Expected function call"),
     }
 }
+
+// Check that a return statement preserves its expression.
+#[test]
+fn stores_return_statement() {
+    let statement = Stmt::Return {
+        value: (Expr::Identifier(String::from("total"))),
+    };
+
+    let Stmt::Return { value } = statement;
+
+    assert_eq!(value, Expr::Identifier(String::from("total")));
+}
