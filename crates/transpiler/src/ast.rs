@@ -52,7 +52,7 @@ pub enum UnaryOp {
     Not,
 }
 
-// Represent statements in the syntax tree
+// Represent statements in the syntax tree.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Return {
@@ -76,6 +76,19 @@ pub enum Stmt {
         condition: Expr,
         body: Vec<Stmt>,
     },
+    FunctionDef {
+        name: String,
+        parameters: Vec<Parameter>,
+        return_type: String,
+        body: Vec<Stmt>,
+    },
+}
+
+// Represent a typed function parameter.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Parameter {
+    pub name: String,
+    pub type_name: String,
 }
 
 #[cfg(test)]

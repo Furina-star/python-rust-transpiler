@@ -1,7 +1,5 @@
 //! Unit tests for abstract syntax tree structures.
 
-use crate::ast::Expr::Integer;
-
 use super::*;
 
 // Check that an integer expression preserves its literal value.
@@ -332,8 +330,18 @@ fn stores_if_else_statement() {
             else_branch,
         } => {
             assert_eq!(condition, Expr::Boolean(true));
-            assert_eq!(then_branch, vec![Stmt::Return { value: Integer(1) }]);
-            assert_eq!(else_branch, vec![Stmt::Return { value: Integer(0) }]);
+            assert_eq!(
+                then_branch,
+                vec![Stmt::Return {
+                    value: Expr::Integer(1)
+                }]
+            );
+            assert_eq!(
+                else_branch,
+                vec![Stmt::Return {
+                    value: Expr::Integer(0)
+                }]
+            );
         }
         _ => panic!("Expected if statement"),
     }
@@ -349,10 +357,7 @@ fn stores_while_statement() {
         value: Expr::Integer(1),
     }];
 
-    let statement = Stmt::While {
-        condition: condition,
-        body: body,
-    };
+    let statement = Stmt::While { condition, body };
 
     match statement {
         Stmt::While { condition, body } => {
@@ -366,5 +371,51 @@ fn stores_while_statement() {
             );
         }
         _ => panic!("Expected while statement"),
+    }
+}
+
+// Check that a typed function definition preserves its signature and body.
+#[test]
+fn stores_typed_function_definition() {
+    let parameters = vec![Parameter {
+        name: String::from("value"),
+        type_name: String::from("int"),
+    }];
+
+    let body = vec![Stmt::Return {
+        value: Expr::Identifier(String::from("value")),
+    }];
+
+    let statement = Stmt::FunctionDef {
+        name: String::from("identity"),
+        parameters,
+        return_type: String::from("int"),
+        body,
+    };
+
+    match statement {
+        Stmt::FunctionDef {
+            name,
+            parameters,
+            return_type,
+            body,
+        } => {
+            assert_eq!(name, "identity");
+            assert_eq!(
+                parameters,
+                vec![Parameter {
+                    name: String::from("value"),
+                    type_name: String::from("int")
+                }]
+            );
+            assert_eq!(return_type, "int");
+            assert_eq!(
+                body,
+                vec![Stmt::Return {
+                    value: Expr::Identifier(String::from("value"))
+                }]
+            );
+        }
+        _ => panic!("Expected function definition"),
     }
 }
