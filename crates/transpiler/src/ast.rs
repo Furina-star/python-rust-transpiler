@@ -24,13 +24,6 @@ pub enum Expr {
     },
 }
 
-// Represent statements in the syntax tree
-#[derive(Debug, Clone, PartialEq)]
-pub enum Stmt {
-    Return { value: Expr },
-    Assign { name: String, value: Expr },
-}
-
 // Represent operators for binary expressions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
@@ -60,6 +53,23 @@ pub enum BinaryOp {
 pub enum UnaryOp {
     Negate,
     Not,
+}
+
+// Represent statements in the syntax tree
+#[derive(Debug, Clone, PartialEq)]
+pub enum Stmt {
+    Return {
+        value: Expr,
+    },
+    Assign {
+        name: String,
+        value: Expr,
+    },
+    VarDecl {
+        name: String,
+        type_name: String,
+        value: Expr,
+    },
 }
 
 #[cfg(test)]

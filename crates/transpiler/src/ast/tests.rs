@@ -283,3 +283,27 @@ fn stores_assignment_statement() {
         _ => panic!("Expected assignment statement"),
     }
 }
+
+// Check that a typed variable declaration preserves its name, type, and value.
+#[test]
+fn stores_typed_variable_declaration() {
+    let statement = Stmt::VarDecl {
+        name: String::from("total"),
+        type_name: String::from("int"),
+        value: Expr::Integer(42),
+    };
+
+    match statement {
+        Stmt::VarDecl {
+            name,
+            type_name,
+            value,
+        } => {
+            assert_eq!(name, String::from("total"));
+            assert_eq!(type_name, String::from("int"));
+            assert_eq!(value, Expr::Integer(42));
+        }
+
+        _ => panic!("Expected typed variable declaration"),
+    }
+}
