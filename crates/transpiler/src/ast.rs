@@ -22,18 +22,25 @@ pub enum Expr {
 // Represent operators for binary expressions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
+    // Arithmetic
     Add,
     Multiply,
     Subtract,
     Divide,
     FloorDivide,
     Modulo,
+
+    // Comparison
     Equal,
     NotEqual,
     Less,
     LessEqual,
     Greater,
     GreaterEqual,
+
+    // Logical
+    And,
+    Or,
 }
 
 // Represent operators for unary expressions.

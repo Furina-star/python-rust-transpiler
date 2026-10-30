@@ -216,3 +216,21 @@ fn stores_greater_equal_comparison() {
         _ => panic!("Expected comparison expression"),
     }
 }
+
+// Check that a logical AND expression preserves its operands and operator.
+#[test]
+fn stores_logical_and() {
+    let expression = Expr::Binary {
+        left: Box::new(Expr::Identifier(String::from("is_student"))),
+        operator: BinaryOp::And,
+        right: Box::new(Expr::Identifier(String::from("is_active"))),
+    };
+
+    let expected = Expr::Binary {
+        left: Box::new(Expr::Identifier(String::from("is_student"))),
+        operator: BinaryOp::And,
+        right: Box::new(Expr::Identifier(String::from("is_active"))),
+    };
+
+    assert_eq!(expression, expected);
+}
