@@ -193,3 +193,26 @@ fn stores_floor_division() {
         _ => panic!("Expected binary expression"),
     }
 }
+
+// Check that a comparison expression preserves its operands and operator.
+#[test]
+fn stores_greater_equal_comparison() {
+    let expression = Expr::Binary {
+        left: Box::new(Expr::Identifier(String::from("age"))),
+        operator: BinaryOp::GreaterEqual,
+        right: Box::new(Expr::Integer(18)),
+    };
+
+    match expression {
+        Expr::Binary {
+            left,
+            operator,
+            right,
+        } => {
+            assert_eq!(*left, Expr::Identifier(String::from("age")));
+            assert_eq!(operator, BinaryOp::GreaterEqual);
+            assert_eq!(*right, Expr::Integer(18))
+        }
+        _ => panic!("Expected comparison expression"),
+    }
+}

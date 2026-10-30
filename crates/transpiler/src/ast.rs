@@ -28,6 +28,12 @@ pub enum BinaryOp {
     Divide,
     FloorDivide,
     Modulo,
+    Equal,
+    NotEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
 }
 
 // Represent operators for unary expressions.
