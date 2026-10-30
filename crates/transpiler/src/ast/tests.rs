@@ -256,10 +256,30 @@ fn stores_function_call() {
 #[test]
 fn stores_return_statement() {
     let statement = Stmt::Return {
-        value: (Expr::Identifier(String::from("total"))),
+        value: Expr::Identifier(String::from("total")),
     };
 
-    let Stmt::Return { value } = statement;
+    match statement {
+        Stmt::Return { value } => {
+            assert_eq!(value, Expr::Identifier(String::from("total")));
+        }
+        _ => panic!("Expected return statement"),
+    }
+}
 
-    assert_eq!(value, Expr::Identifier(String::from("total")));
+// Check that an assignment statement preserves its variable name and value.
+#[test]
+fn stores_assignment_statement() {
+    let statement = Stmt::Assign {
+        name: String::from("total"),
+        value: Expr::Integer(42),
+    };
+
+    match statement {
+        Stmt::Assign { name, value } => {
+            assert_eq!(name, String::from("total"));
+            assert_eq!(value, Expr::Integer(42));
+        }
+        _ => panic!("Expected assignment statement"),
+    }
 }

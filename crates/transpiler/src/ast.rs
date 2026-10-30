@@ -1,4 +1,4 @@
-//! Abstract syntax tree representations for expressions.
+//! Abstract syntax tree representations for expressions and statements.
 
 // Represent expressions in the syntax tree.
 #[derive(Debug, Clone, PartialEq)]
@@ -28,6 +28,7 @@ pub enum Expr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Return { value: Expr },
+    Assign { name: String, value: Expr },
 }
 
 // Represent operators for binary expressions.
