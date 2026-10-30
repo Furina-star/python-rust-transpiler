@@ -6,18 +6,15 @@ pub enum Expr {
     Integer(i32),
     Boolean(bool),
     Identifier(String),
-
     Binary {
         left: Box<Expr>,
         operator: BinaryOp,
         right: Box<Expr>,
     },
-
     Unary {
         operator: UnaryOp,
         operand: Box<Expr>,
     },
-
     Call {
         callee: Box<Expr>,
         arguments: Vec<Expr>,
@@ -69,6 +66,11 @@ pub enum Stmt {
         name: String,
         type_name: String,
         value: Expr,
+    },
+    If {
+        condition: Expr,
+        then_branch: Vec<Stmt>,
+        else_branch: Vec<Stmt>,
     },
 }
 

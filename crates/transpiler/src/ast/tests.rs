@@ -1,5 +1,7 @@
 //! Unit tests for abstract syntax tree structures.
 
+use crate::ast::Expr::Integer;
+
 use super::*;
 
 // Check that an integer expression preserves its literal value.
@@ -305,5 +307,34 @@ fn stores_typed_variable_declaration() {
         }
 
         _ => panic!("Expected typed variable declaration"),
+    }
+}
+
+// Check that an if statement preserves its condition and both branches.
+#[test]
+fn stores_if_else_statement() {
+    let condition = Expr::Boolean(true);
+
+    let statement = Stmt::If {
+        condition: condition,
+        then_branch: vec![Stmt::Return {
+            value: Expr::Integer(1),
+        }],
+        else_branch: vec![Stmt::Return {
+            value: Expr::Integer(0),
+        }],
+    };
+
+    match statement {
+        Stmt::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            assert_eq!(condition, Expr::Boolean(true));
+            assert_eq!(then_branch, vec![Stmt::Return { value: Integer(1) }]);
+            assert_eq!(else_branch, vec![Stmt::Return { value: Integer(0) }]);
+        }
+        _ => panic!("Expected if statement"),
     }
 }
