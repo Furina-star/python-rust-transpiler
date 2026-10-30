@@ -314,7 +314,7 @@ fn stores_if_else_statement() {
     let condition = Expr::Boolean(true);
 
     let statement = Stmt::If {
-        condition: condition,
+        condition,
         then_branch: vec![Stmt::Return {
             value: Expr::Integer(1),
         }],
