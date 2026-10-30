@@ -338,3 +338,33 @@ fn stores_if_else_statement() {
         _ => panic!("Expected if statement"),
     }
 }
+
+// Check that a while statement preserves its condition and body.
+#[test]
+fn stores_while_statement() {
+    let condition = Expr::Identifier(String::from("active"));
+
+    let body = vec![Stmt::Assign {
+        name: String::from("count"),
+        value: Expr::Integer(1),
+    }];
+
+    let statement = Stmt::While {
+        condition: condition,
+        body: body,
+    };
+
+    match statement {
+        Stmt::While { condition, body } => {
+            assert_eq!(condition, Expr::Identifier(String::from("active")));
+            assert_eq!(
+                body,
+                vec![Stmt::Assign {
+                    name: String::from("count"),
+                    value: Expr::Integer(1),
+                }]
+            );
+        }
+        _ => panic!("Expected while statement"),
+    }
+}
