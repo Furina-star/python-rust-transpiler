@@ -419,3 +419,27 @@ fn stores_typed_function_definition() {
         _ => panic!("Expected function definition"),
     }
 }
+
+// Check that an expression statement preserves a standalone function call.
+#[test]
+fn stores_expression_statement() {
+    let call = Expr::Call {
+        callee: Box::new(Expr::Identifier(String::from("log"))),
+        arguments: vec![Expr::Integer(42)],
+    };
+
+    let statement = Stmt::ExprStmt { expression: call };
+
+    match statement {
+        Stmt::ExprStmt { expression } => {
+            assert_eq!(
+                expression,
+                Expr::Call {
+                    callee: Box::new(Expr::Identifier(String::from("log"))),
+                    arguments: vec![Expr::Integer(42)],
+                }
+            )
+        }
+        _ => panic!("Expected expression statement"),
+    }
+}

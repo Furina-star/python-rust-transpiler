@@ -82,6 +82,9 @@ pub enum Stmt {
         return_type: String,
         body: Vec<Stmt>,
     },
+    ExprStmt {
+        expression: Expr,
+    },
 }
 
 // Represent a typed function parameter.
