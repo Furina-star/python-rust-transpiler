@@ -1,6 +1,7 @@
 //! Recursive-descent parser for the restricted Python-like language.
 
-use crate::token::{LocatedToken, Token};
+use crate::diagnostic::Diagnostic;
+use crate::token::{LocatedToken, SourcePosition, Token};
 
 // Store positioned tokens and track the current parsing position.
 pub struct Parser {
@@ -26,19 +27,42 @@ impl Parser {
         Some(token)
     }
 
-    // Check whether the current token matches the expected results.
+    // Check whether the current token matches the expected token.
     pub fn check(&self, expected: &Token) -> bool {
         self.peek()
             .is_some_and(|located| &located.token == expected)
     }
 
-    // Consume the current token only when it matches the expected token
+    // Consume the current token only when it matches the expected token.
     pub fn consume_if(&mut self, expected: &Token) -> bool {
         if !self.check(expected) {
             return false;
         }
 
         self.advance().is_some()
+    }
+
+    // Consume an expected token or report a syntax error.
+    pub fn expect(&mut self, expected: &Token) -> Result<LocatedToken, Diagnostic> {
+        if self.check(expected) {
+            return Ok(self.advance().unwrap().clone());
+        }
+
+        let position = self
+            .peek()
+            .map(|located| located.position)
+            .or_else(|| self.tokens.last().map(|located| located.position))
+            .unwrap_or(SourcePosition { line: 1, column: 1 });
+
+        let found = self
+            .peek()
+            .map(|located| format!("{:?}", located.token))
+            .unwrap_or_else(|| String::from("end of token stream"));
+
+        Err(Diagnostic {
+            position,
+            message: format!("Expected {expected:?}, found {found}"),
+        })
     }
 }
 

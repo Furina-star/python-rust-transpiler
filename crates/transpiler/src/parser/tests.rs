@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::lexer::tokenize_with_diagnostics;
-use crate::token::Token;
+use crate::token::{SourcePosition, Token};
 
 // Check that peeking returns the first token without consuming it.
 #[test]
@@ -85,4 +85,47 @@ fn consumes_only_matching_tokens() {
     assert_eq!(parser.current, 2);
 
     assert_eq!(parser.peek().unwrap().token, Token::Newline);
+}
+
+// Check that expecting a matching token consumes it successfully.
+#[test]
+fn expects_matching_token() {
+    let tokens = tokenize_with_diagnostics("return 42").unwrap();
+    let mut parser = Parser::new(tokens);
+
+    let token = parser.expect(&Token::Return).unwrap();
+
+    assert_eq!(token.token, Token::Return);
+    assert_eq!(parser.current, 1);
+    assert_eq!(parser.peek().unwrap().token, Token::Integer(42));
+}
+
+// Check that expecting the wrong token reports an error without advancing.
+#[test]
+fn reports_error_for_unexpected_token() {
+    let tokens = tokenize_with_diagnostics("return 42").unwrap();
+    let mut parser = Parser::new(tokens);
+
+    let error = parser.expect(&Token::Newline).unwrap_err();
+
+    assert_eq!(error.position, SourcePosition { line: 1, column: 1 });
+    assert_eq!(error.message, "Expected Newline, found Return");
+    assert_eq!(parser.current, 0);
+}
+
+// Check that expecting a token after EOF returns a diagnostic.
+#[test]
+fn reports_error_after_end_of_stream() {
+    let tokens = tokenize_with_diagnostics("42").unwrap();
+    let mut parser = Parser::new(tokens);
+
+    parser.advance().unwrap();
+    parser.advance().unwrap();
+    parser.advance().unwrap();
+
+    let error = parser.expect(&Token::Return).unwrap_err();
+
+    assert_eq!(error.position, SourcePosition { line: 1, column: 3 });
+    assert_eq!(error.message, "Expected Return, found end of token stream");
+    assert_eq!(parser.current, 3);
 }
