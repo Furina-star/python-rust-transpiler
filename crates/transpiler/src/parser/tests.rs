@@ -56,3 +56,33 @@ fn advancing_past_eof_returns_none() {
 
     assert_eq!(parser.current, 3);
 }
+
+// Check that matching a token does not advance the parser.
+#[test]
+fn checks_token_without_consuming() {
+    let tokens = tokenize_with_diagnostics("return 42").unwrap();
+    let parser = Parser::new(tokens);
+
+    assert!(parser.check(&Token::Return));
+    assert!(!parser.check(&Token::Integer(42)));
+
+    assert_eq!(parser.current, 0);
+}
+
+// Check that conditional consumption advances only for matching tokens.
+#[test]
+fn consumes_only_matching_tokens() {
+    let tokens = tokenize_with_diagnostics("return 42").unwrap();
+    let mut parser = Parser::new(tokens);
+
+    assert!(!parser.consume_if(&Token::Integer(42)));
+    assert_eq!(parser.current, 0);
+
+    assert!(parser.consume_if(&Token::Return));
+    assert_eq!(parser.current, 1);
+
+    assert!(parser.consume_if(&Token::Integer(42)));
+    assert_eq!(parser.current, 2);
+
+    assert_eq!(parser.peek().unwrap().token, Token::Newline);
+}
