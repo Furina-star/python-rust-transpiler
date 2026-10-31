@@ -18,6 +18,13 @@ impl Parser {
     pub fn peek(&self) -> Option<&LocatedToken> {
         self.tokens.get(self.current)
     }
+
+    // Return the current token and advance to the next position
+    pub fn advance(&mut self) -> Option<&LocatedToken> {
+        let token = self.tokens.get(self.current)?;
+        self.current += 1;
+        Some(token)
+    }
 }
 
 #[cfg(test)]
